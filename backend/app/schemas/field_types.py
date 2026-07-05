@@ -48,10 +48,21 @@ def get_field_types():
         ),
 
         FieldType(
-            type="email",
-            label="Email",
-            config=[]
+    type="email",
+    label="Email",
+    config=[
+        ConfigProperty(
+            name="placeholder",
+            type="text",
+            label="Placeholder"
         ),
+        ConfigProperty(
+            name="required",
+            type="boolean",
+            label="Required"
+        ),
+    ],
+),
 
         FieldType(
             type="dropdown",

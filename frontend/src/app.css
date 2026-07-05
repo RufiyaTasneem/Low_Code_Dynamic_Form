@@ -1,0 +1,324 @@
+/* ===========================
+   Global
+=========================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Inter", sans-serif;
+}
+
+body {
+    background: #f6f8fc;
+    color: #1f2937;
+}
+
+/* ===========================
+   Header
+=========================== */
+
+.form-header {
+    background: #ffffff;
+    margin: 25px;
+    padding: 28px;
+    border-radius: 18px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.form-header h1 {
+    color: #5b5ce6;
+    font-size: 30px;
+    margin-bottom: 25px;
+}
+
+/* ===========================
+   Form Inputs
+=========================== */
+
+.form-group {
+    margin-bottom: 22px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+
+    font-size: 15px;
+
+    transition: .25s;
+
+    background: white;
+}
+
+.form-group textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #6c63ff;
+    box-shadow: 0 0 0 4px rgba(108, 99, 255, .15);
+}
+
+/* ===========================
+   Create Button
+=========================== */
+
+.form-header button {
+    background: #6c63ff;
+    color: white;
+
+    border: none;
+
+    padding: 12px 24px;
+
+    border-radius: 10px;
+
+    font-size: 15px;
+
+    cursor: pointer;
+
+    transition: .25s;
+}
+
+.form-header button:hover {
+    background: #5649f8;
+    transform: translateY(-2px);
+}
+
+/* ===========================
+   Main Layout
+=========================== */
+
+.app {
+    display: grid;
+
+    grid-template-columns: 260px 400px 1fr;
+
+    gap: 25px;
+
+    padding: 0 25px 25px;
+}
+
+/* ===========================
+   Cards
+=========================== */
+
+.palette,
+.config,
+.canvas {
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 25px;
+
+    border: 1px solid #e5e7eb;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .05);
+}
+
+.palette h2,
+.config h2,
+.canvas h2 {
+    margin-bottom: 25px;
+    font-size: 24px;
+    color: #1f2937;
+}
+
+/* ===========================
+   Field Palette
+=========================== */
+
+.field-card {
+
+    background: white;
+
+    border: 1px solid #ececec;
+
+    border-radius: 14px;
+
+    padding: 18px;
+
+    margin-bottom: 15px;
+
+    cursor: pointer;
+
+    transition: .25s;
+}
+
+.field-card h3 {
+    font-size: 18px;
+    color: #111827;
+}
+
+.field-card p {
+    color: #6b7280;
+    margin-top: 5px;
+}
+
+.field-card:hover {
+
+    transform: translateY(-3px);
+
+    border-color: #6c63ff;
+
+    box-shadow: 0 8px 18px rgba(108, 99, 255, .18);
+}
+
+/* ===========================
+   Configuration Inputs
+=========================== */
+
+.config-fields {
+
+    display: grid;
+
+    grid-template-columns: repeat(2, 180px);
+
+    gap: 20px;
+}
+
+.config-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.config-item label {
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.config-item input {
+    width: 180px;
+}
+
+/* ===========================
+   Add Field Button
+=========================== */
+
+.add-btn {
+
+    margin-top: 25px;
+
+    width: 100%;
+
+    background: linear-gradient(90deg, #6C63FF, #8B5CF6);
+
+    color: white;
+
+    border: none;
+
+    border-radius: 10px;
+
+    padding: 14px;
+
+    cursor: pointer;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    transition: .3s;
+}
+
+.add-btn:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 8px 18px rgba(108, 99, 255, .25);
+}
+
+/* ===========================
+   Canvas Cards
+=========================== */
+
+.canvas-field {
+
+    border: 1px solid #ececec;
+
+    border-radius: 14px;
+
+    padding: 18px;
+
+    margin-bottom: 18px;
+
+    background: white;
+
+    transition: .25s;
+}
+
+.canvas-field:hover {
+
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .08);
+}
+
+/* ===========================
+   Action Buttons
+=========================== */
+
+.action-buttons {
+
+    display: flex;
+
+    gap: 12px;
+
+    margin-top: 15px;
+}
+
+.edit-btn {
+
+    background: #ede9fe;
+
+    color: #6c63ff;
+
+    border: none;
+
+    border-radius: 8px;
+
+    padding: 8px 16px;
+
+    cursor: pointer;
+}
+
+.delete-btn {
+
+    background: #fee2e2;
+
+    color: #ef4444;
+
+    border: none;
+
+    border-radius: 8px;
+
+    padding: 8px 16px;
+
+    cursor: pointer;
+}
+
+/* ===========================
+   Empty Message
+=========================== */
+
+.no-selection {
+    text-align: center;
+    color: #6b7280;
+    margin-top: 80px;
+}

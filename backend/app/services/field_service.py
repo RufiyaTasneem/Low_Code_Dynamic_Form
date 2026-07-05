@@ -1,14 +1,25 @@
 def get_field_types():
-
     return [
 
         {
             "type": "text",
             "label": "Text",
             "config": [
-                {"name": "min_length", "type": "number"},
-                {"name": "max_length", "type": "number"},
-                {"name": "placeholder", "type": "text"},
+                {
+                    "name": "min_length",
+                    "type": "number",
+                    "label": "Minimum Length"
+                },
+                {
+                    "name": "max_length",
+                    "type": "number",
+                    "label": "Maximum Length"
+                },
+                {
+                    "name": "placeholder",
+                    "type": "text",
+                    "label": "Placeholder"
+                },
             ],
         },
 
@@ -16,23 +27,50 @@ def get_field_types():
             "type": "number",
             "label": "Number",
             "config": [
-                {"name": "min", "type": "number"},
-                {"name": "max", "type": "number"},
-                {"name": "decimal", "type": "boolean"},
+                {
+                    "name": "min",
+                    "type": "number",
+                    "label": "Minimum Value"
+                },
+                {
+                    "name": "max",
+                    "type": "number",
+                    "label": "Maximum Value"
+                },
+                {
+                    "name": "decimal",
+                    "type": "boolean",
+                    "label": "Allow Decimal"
+                },
             ],
         },
 
         {
             "type": "email",
             "label": "Email",
-            "config": [],
+            "config": [
+                {
+                    "name": "placeholder",
+                    "type": "text",
+                    "label": "Placeholder"
+                },
+                {
+                    "name": "required",
+                    "type": "boolean",
+                    "label": "Required"
+                },
+            ],
         },
 
         {
             "type": "dropdown",
             "label": "Dropdown",
             "config": [
-                {"name": "options", "type": "list"}
+                {
+                    "name": "options",
+                    "type": "list",
+                    "label": "Options"
+                },
             ],
         },
 
@@ -40,7 +78,11 @@ def get_field_types():
             "type": "checkbox",
             "label": "Checkbox",
             "config": [
-                {"name": "options", "type": "list"}
+                {
+                    "name": "options",
+                    "type": "list",
+                    "label": "Options"
+                },
             ],
         },
 
@@ -48,8 +90,16 @@ def get_field_types():
             "type": "date",
             "label": "Date",
             "config": [
-                {"name": "min_date", "type": "date"},
-                {"name": "max_date", "type": "date"},
+                {
+                    "name": "min_date",
+                    "type": "date",
+                    "label": "Minimum Date"
+                },
+                {
+                    "name": "max_date",
+                    "type": "date",
+                    "label": "Maximum Date"
+                },
             ],
         },
 
@@ -57,8 +107,16 @@ def get_field_types():
             "type": "file",
             "label": "File Upload",
             "config": [
-                {"name": "max_size", "type": "number"},
-                {"name": "file_types", "type": "list"},
+                {
+                    "name": "file_types",
+                    "type": "list",
+                    "label": "Allowed File Types"
+                },
+                {
+                    "name": "max_size",
+                    "type": "number",
+                    "label": "Maximum Size (MB)"
+                },
             ],
         },
 
@@ -66,7 +124,11 @@ def get_field_types():
             "type": "rating",
             "label": "Rating",
             "config": [
-                {"name": "scale", "type": "number"},
+                {
+                    "name": "scale",
+                    "type": "number",
+                    "label": "Maximum Rating"
+                },
             ],
         },
 
