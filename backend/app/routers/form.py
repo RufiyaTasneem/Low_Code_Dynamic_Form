@@ -6,12 +6,15 @@ from app.schemas.form import (
     FormCreate,
     FormResponse,
     FieldCreate,
+    FieldUpdate,
     FieldResponse,
 )
 from app.services.form_service import (
     create_form,
     add_field,
     get_form,
+    update_field,
+    delete_field,
 )
 
 router = APIRouter(
@@ -59,8 +62,46 @@ def create_new_field(
         form_id,
         field,
     )
+@router.patch("/{form_id}/fields/{field_id}", response_model=FieldResponse)
+def edit_field(
+    form_id: int,
+    field_id: int,
+    field: FieldUpdate,
+    db: Session = Depends(get_db),
+):
+    existing_form = get_form(db, form_id)
 
+    if existing_form is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Form not found",
+        )
 
+    return update_field(
+        db,
+        form_id,
+        field_id,
+        field,
+    )
+@router.delete("/{form_id}/fields/{field_id}")
+def remove_field(
+    form_id: int,
+    field_id: int,
+    db: Session = Depends(get_db),
+):
+    existing_form = get_form(db, form_id)
+
+    if existing_form is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Form not found",
+        )
+
+    return delete_field(
+        db,
+        form_id,
+        field_id,
+    )
 @router.get("/{form_id}", response_model=FormResponse)
 def get_form_details(
     form_id: int,

@@ -10,7 +10,9 @@ class FieldCreate(BaseModel):
     type: str
     field_order: int
     config: Dict[str, Any]
-
+class FieldUpdate(BaseModel):
+    label: str
+    config: Dict[str, Any]
 
 class FieldResponse(FieldCreate):
     id: int
