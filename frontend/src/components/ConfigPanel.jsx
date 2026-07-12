@@ -6,6 +6,7 @@ function ConfigPanel({
     setEditingField,
     onAddField,
     onUpdateField,
+    isLocked,
 }) {
     const [label, setLabel] = useState("");
     const [config, setConfig] = useState({});
@@ -50,6 +51,15 @@ function ConfigPanel({
     };
 
     const handleAdd = () => {
+        console.log("ConfigPanel handleAdd", {
+            selectedField,
+            label,
+            config,
+            isLocked,
+        });
+
+        if (isLocked) return;
+
         const fieldData = {
             label,
             type: selectedField.type,
@@ -57,6 +67,7 @@ function ConfigPanel({
             config,
         };
 
+        console.log("ConfigPanel sending fieldData", fieldData);
         onAddField(fieldData);
 
         setLabel("");
@@ -64,6 +75,8 @@ function ConfigPanel({
     };
 
     const handleUpdate = () => {
+        if (isLocked) return;
+
         onUpdateField({
             id: editingField.id,
             label,
@@ -155,9 +168,16 @@ function ConfigPanel({
                 </div>
             ))}
 
+            {isLocked && (
+                <p className="locked-message">
+                    A published version is selected. Editing is disabled.
+                </p>
+            )}
             <button
+                type="button"
                 className="add-btn"
                 onClick={editingField ? handleUpdate : handleAdd}
+                disabled={isLocked}
             >
                 {editingField ? "Update Field" : "Add Field"}
             </button>

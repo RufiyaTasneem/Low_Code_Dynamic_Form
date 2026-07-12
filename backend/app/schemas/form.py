@@ -13,7 +13,8 @@ class FieldCreate(BaseModel):
 class FieldUpdate(BaseModel):
     label: str
     config: Dict[str, Any]
-
+class FieldReorder(BaseModel):
+    field_ids: List[int]
 class FieldResponse(FieldCreate):
     id: int
     form_id: int
