@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import field, form
+from app.routers import field, form, public
 
 app = FastAPI(
     title="Low-Code Form Builder API",
@@ -34,5 +34,5 @@ def health():
 
 
 app.include_router(field.router)
-print(">>> including form router <<<")
 app.include_router(form.router)
+app.include_router(public.router)

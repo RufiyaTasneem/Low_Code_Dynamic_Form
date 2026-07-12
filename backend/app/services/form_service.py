@@ -6,7 +6,6 @@ from app.models.field import Field
 from app.services.field_type_service import get_field_types
 from datetime import datetime
 
-from app.models.form import Form
 from app.models.form_version import FormVersion
 
 # -----------------------------
@@ -469,3 +468,20 @@ def get_form_versions(
         .order_by(FormVersion.version.desc())
         .all()
     )
+def get_version(db: Session, form_id: int, version_id: int):
+    version = (
+        db.query(FormVersion)
+        .filter(
+            FormVersion.form_id == form_id,
+            FormVersion.id == version_id,
+        )
+        .first()
+    )
+
+    if version is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Version not found",
+        )
+
+    return version.snapshot

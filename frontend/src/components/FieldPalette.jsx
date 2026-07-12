@@ -8,10 +8,11 @@ function FieldPalette({ onSelect }) {
     useEffect(() => {
         api.get("/field-types/")
             .then((response) => {
-                setFields(response.data);
+                setFields(Array.isArray(response.data) ? response.data : []);
             })
             .catch((error) => {
                 console.error(error);
+                setFields([]);
             });
     }, []);
 
@@ -19,13 +20,17 @@ function FieldPalette({ onSelect }) {
         <div>
             <h2>Field Types</h2>
 
-            {fields.map((field) => (
-                <FieldCard
-                    key={field.type}
-                    field={field}
-                    onSelect={onSelect}
-                />
-            ))}
+            {fields.length === 0 ? (
+                <p>No field types available.</p>
+            ) : (
+                fields.map((field) => (
+                    <FieldCard
+                        key={field.type}
+                        field={field}
+                        onSelect={onSelect}
+                    />
+                ))
+            )}
         </div>
     );
 }

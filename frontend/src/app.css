@@ -463,6 +463,49 @@ select {
 }
 
 /* ===========================
+   Shareable Link Card
+=========================== */
+
+.share-link-card {
+    background: white;
+    border-radius: 24px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+    padding: 24px 28px;
+    box-shadow:
+        0 10px 30px rgba(2, 6, 23, .05),
+        0 2px 8px rgba(2, 6, 23, .04);
+}
+
+.share-link-header {
+    margin-bottom: 16px;
+}
+
+.share-link-header h2 {
+    font-size: 20px;
+    color: #111827;
+    margin-top: 4px;
+}
+
+.share-link-body {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.share-link-input {
+    flex: 1;
+    min-width: 280px;
+}
+
+.share-link-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ===========================
    Responsive
 =========================== */
 
@@ -502,6 +545,15 @@ select {
 
     .preview-form {
         padding: 20px;
+    }
+
+    .share-link-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .share-link-input {
+        min-width: 0;
     }
 }
 

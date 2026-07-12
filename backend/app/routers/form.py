@@ -24,7 +24,10 @@ from app.services.form_service import (
     create_new_draft,
     get_form_versions,
     get_draft,
-    create_new_draft,
+    get_version,
+)
+from app.services.form_link_service import (
+    generate_link,
 )
 
 router = APIRouter(
@@ -158,12 +161,6 @@ def get_form_details(
 
     return form
 @router.get("/{form_id}/versions")
-def list_form_versions(
-    form_id: int,
-    db: Session = Depends(get_db),
-):
-    return get_form_versions(db, form_id)
-@router.get("/{form_id}/versions")
 def get_versions(
     form_id: int,
     db: Session = Depends(get_db),
@@ -172,6 +169,17 @@ def get_versions(
         db,
         form_id,
     )
+
+
+@router.get("/{form_id}/versions/{version_id}")
+def get_version_details(
+    form_id: int,
+    version_id: int,
+    db: Session = Depends(get_db),
+):
+    return get_version(db, form_id, version_id)
+
+
 @router.post("/{form_id}/draft")
 def create_new_draft_api(
     form_id: int,
@@ -190,3 +198,9 @@ def get_draft_api(
         db,
         form_id,
     )
+@router.post("/{form_id}/generate-link")
+def generate_shareable_link(
+    form_id: int,
+    db: Session = Depends(get_db),
+):
+    return generate_link(db, form_id)

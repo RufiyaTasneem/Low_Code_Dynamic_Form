@@ -7,6 +7,7 @@ import {
   archiveFormApi,
   createNewDraftApi,
   getDraftApi,
+  generateShareableLinkApi,
 } from "./api/formApi";
 
 import FieldPalette from "./components/FieldPalette";
@@ -134,24 +135,35 @@ function App() {
   const [previewMode, setPreviewMode] = useState(false);
   const [versions, setVersions] = useState([]);
   const [selectedVersion, setSelectedVersion] = useState(null);
+  const [shareUrl, setShareUrl] = useState("");
+  const [isGeneratingShare, setIsGeneratingShare] = useState(false);
 
-  const isLocked = !selectedVersion || selectedVersion.status !== "Draft";
+  const normalizeVersionStatus = (status) =>
+    (status ?? "").toString().trim().toLowerCase();
 
-  const fetchVersions = async (id) => {
+  const isDraftVersion = (version) =>
+    normalizeVersionStatus(version?.status) === "draft";
+
+  const isLocked = !selectedVersion || !isDraftVersion(selectedVersion);
+
+  const fetchVersions = async (id, preferredVersion = null) => {
     try {
       const response = await getFormVersions(id);
-      const versionsData = response.data || [];
+      const versionsData = Array.isArray(response.data) ? response.data : [];
 
       setVersions(versionsData);
 
-      const draftVersion = versionsData.find(
-        (version) => version.status === "Draft"
-      );
+      const draftVersion = versionsData.find(isDraftVersion);
+      const nextSelectedVersion = preferredVersion || draftVersion || versionsData[0] || null;
 
-      setSelectedVersion(draftVersion || versionsData[0] || null);
+      setSelectedVersion(nextSelectedVersion);
+      return nextSelectedVersion;
     } catch (error) {
       console.error("Failed to fetch versions:", error);
+      setVersions([]);
+      setSelectedVersion(null);
       alert("Failed to load version history.");
+      return null;
     }
   };
 
@@ -168,9 +180,10 @@ function App() {
     const fetchFieldTypes = async () => {
       try {
         const response = await API.get("/field-types/");
-        setFieldTypes(response.data);
+        setFieldTypes(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error(error);
+        setFieldTypes([]);
       }
     };
 
@@ -184,7 +197,7 @@ function App() {
 
       setTitle(formData.title || "");
       setDescription(formData.description || "");
-      setFields(formData.fields || []);
+      setFields(Array.isArray(formData.fields) ? formData.fields : []);
     } catch (error) {
       console.error(error);
     }
@@ -204,9 +217,13 @@ function App() {
 
       const createdFormId = response.data.id;
       setFormId(createdFormId);
+      setSelectedField(null);
+      setEditingField(null);
       await fetchForm(createdFormId);
-      await createNewDraftApi(createdFormId);
-      await fetchVersions(createdFormId);
+
+      const draftResponse = await createNewDraftApi(createdFormId);
+      const createdDraft = draftResponse?.data || null;
+      await fetchVersions(createdFormId, createdDraft);
       alert("Form created successfully!");
     } catch (error) {
       console.error(error);
@@ -231,6 +248,8 @@ function App() {
       alert("Form published successfully!");
       await fetchForm(formId);
       await fetchVersions(formId);
+      setSelectedField(null);
+      setEditingField(null);
     } catch (error) {
       console.error(error);
       alert("Failed to publish form.");
@@ -260,23 +279,67 @@ function App() {
     }
   };
 
-  const handleVersionSelect = (version) => {
+  const generateShareLink = async () => {
+    if (!formId) {
+      alert("Please create a form first!");
+      return;
+    }
+
+    try {
+      setIsGeneratingShare(true);
+      const res = await generateShareableLinkApi(formId);
+      const url = res.data?.url || "";
+      setShareUrl(url);
+      alert("Shareable link generated!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to generate shareable link.");
+    } finally {
+      setIsGeneratingShare(false);
+    }
+  };
+
+  const copyShareLink = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert("Link copied to clipboard!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to copy link. Please copy manually.");
+    }
+  };
+
+  const handleVersionSelect = async (version) => {
     setSelectedVersion(version);
     setEditingField(null);
     setSelectedField(null);
+
+    try {
+      const res = await API.get(`/forms/${formId}/versions/${version.id}`);
+      const snapshot = res.data || {};
+
+      setTitle(snapshot.title || "");
+      setDescription(snapshot.description || "");
+      setFields(Array.isArray(snapshot.fields) ? snapshot.fields : []);
+    } catch (error) {
+      console.error("Failed to load selected version:", error);
+      alert("Failed to load the selected version.");
+    }
   };
 
   const handleEditAsNewDraft = async () => {
-    if (!selectedVersion || selectedVersion.status !== "Published") return;
+    if (!selectedVersion || normalizeVersionStatus(selectedVersion.status) !== "published") return;
 
     try {
-      await createNewDraftApi(formId);
+      const createdDraftResponse = await createNewDraftApi(formId);
+      const createdDraft = createdDraftResponse?.data || null;
       const response = await getDraftApi(formId);
-      const draft = response.data;
+      const draft = response?.data || createdDraft;
 
       setSelectedVersion(draft);
       await fetchForm(formId);
-      await fetchVersions(formId);
+      await fetchVersions(formId, draft);
 
       setEditingField(null);
       setSelectedField(null);
@@ -430,6 +493,11 @@ function App() {
     }
   };
 
+  const handleFieldTypeSelect = (fieldType) => {
+    setSelectedField(fieldType);
+    setEditingField(null);
+  };
+
   const sortedFields = [...fields].sort(
     (a, b) => (a.field_order ?? 0) - (b.field_order ?? 0)
   );
@@ -470,6 +538,9 @@ function App() {
               <button onClick={archiveCurrentForm} disabled={!formId}>
                 Archive
               </button>
+              <button onClick={generateShareLink} disabled={!formId || isGeneratingShare}>
+                {isGeneratingShare ? "Generating..." : "Get Shareable Link"}
+              </button>
               <button onClick={createForm} disabled={formId !== null}>
                 {formId ? "Form Created" : "Create Form"}
               </button>
@@ -509,7 +580,7 @@ function App() {
                 <p className="eyebrow">Version History</p>
                 <h2>Versions</h2>
               </div>
-              {selectedVersion?.status === "Published" && (
+              {normalizeVersionStatus(selectedVersion?.status) === "published" && (
                 <button className="ghost-btn" onClick={handleEditAsNewDraft}>
                   Edit as New Draft
                 </button>
@@ -524,9 +595,7 @@ function App() {
               <div className="version-summary-item">
                 <span>Status</span>
                 <span
-                  className={`version-badge ${selectedVersion?.status
-                    ? selectedVersion.status.toLowerCase()
-                    : "draft"}`}
+                  className={`version-badge ${normalizeVersionStatus(selectedVersion?.status) || "draft"}`}
                 >
                   {selectedVersion?.status || "Draft"}
                 </span>
@@ -556,8 +625,7 @@ function App() {
                     <div className="version-card-top">
                       <strong>Version {version.version}</strong>
                       <span
-                        className={`version-badge ${version.status?.toLowerCase() || "draft"
-                          }`}
+                        className={`version-badge ${normalizeVersionStatus(version?.status) || "draft"}`}
                       >
                         {version.status}
                       </span>
@@ -573,10 +641,33 @@ function App() {
           </section>
         )}
 
+        {shareUrl && (
+          <section className="share-link-card">
+            <div className="share-link-header">
+              <div>
+                <p className="eyebrow">Shareable Link</p>
+                <h2>Anyone with this link can fill out the form.</h2>
+              </div>
+            </div>
+
+            <div className="share-link-body">
+              <input type="text" readOnly value={shareUrl} className="share-link-input" />
+              <div className="share-link-actions">
+                <button type="button" className="ghost-btn" onClick={copyShareLink}>
+                  Copy Link
+                </button>
+                <button type="button" onClick={() => window.open(shareUrl, "_blank")}>
+                  Open Form
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
         <div className={`app ${previewMode ? "preview-mode" : ""}`}>
           {!previewMode && (
             <div className="palette">
-              <FieldPalette onSelect={setSelectedField} />
+              <FieldPalette onSelect={handleFieldTypeSelect} />
             </div>
           )}
 

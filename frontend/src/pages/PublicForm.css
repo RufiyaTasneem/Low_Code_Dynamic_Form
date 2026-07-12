@@ -1,0 +1,277 @@
+.public-form-shell {
+    min-height: 100vh;
+    padding: 36px 20px 48px;
+    background: linear-gradient(135deg, #f6f7fb 0%, #eef2ff 100%);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.public-form {
+    width: 100%;
+    max-width: 860px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.07);
+    padding: 36px;
+    animation: publicFadeIn 0.35s ease;
+}
+
+.public-form-header {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eef2ff;
+}
+
+.public-form-header .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #6366f1;
+    margin-bottom: 8px;
+}
+
+.public-form-header h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 10px;
+}
+
+.public-form-header p {
+    color: #6b7280;
+    line-height: 1.7;
+    font-size: 15px;
+}
+
+.public-fields {
+    display: grid;
+    gap: 18px;
+}
+
+.public-field {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.public-field:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(99, 102, 241, 0.12);
+}
+
+.public-field label {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 12px;
+}
+
+.public-field .required-mark {
+    color: #ef4444;
+    margin-left: 4px;
+}
+
+.public-form input,
+.public-form textarea,
+.public-form select {
+    width: 100%;
+    border: 1px solid #dbe2ea;
+    border-radius: 12px;
+    padding: 13px 14px;
+    font-size: 15px;
+    background: #fff;
+    color: #111827;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.public-form input:focus,
+.public-form textarea:focus,
+.public-form select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
+}
+
+.public-form textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.public-form select {
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #6b7280 50%), linear-gradient(135deg, #6b7280 50%, transparent 50%);
+    background-position: calc(100% - 20px) calc(1.2em), calc(100% - 14px) calc(1.2em);
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+}
+
+.public-form input:disabled,
+.public-form textarea:disabled,
+.public-form select:disabled {
+    background: #f8fafc;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.public-form .checkbox-preview,
+.public-form .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 2px;
+}
+
+.public-form .checkbox-preview label,
+.public-form .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0;
+}
+
+.public-form .checkbox-preview input,
+.public-form .radio-group input {
+    width: auto;
+    accent-color: #6366f1;
+}
+
+.public-form .rating-preview {
+    display: flex;
+    gap: 6px;
+    font-size: 28px;
+    color: #f59e0b;
+    padding-top: 4px;
+}
+
+.public-form .file-upload-card {
+    border: 1px dashed #c7d2fe;
+    border-radius: 16px;
+    padding: 18px;
+    background: linear-gradient(180deg, #fbfbff 0%, #f8fafc 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.public-form .file-upload-card strong {
+    color: #111827;
+    font-size: 15px;
+}
+
+.public-form .file-upload-card span {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.public-form .file-upload-card input {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 0;
+}
+
+.public-form .file-upload-card input:focus {
+    box-shadow: none;
+}
+
+.public-form .upload-filename {
+    font-size: 13px;
+    color: #4338ca;
+    font-weight: 600;
+}
+
+.public-form .submit-btn {
+    width: 100%;
+    margin-top: 10px;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.public-form .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(79, 70, 229, 0.26);
+}
+
+.public-form .submit-btn:active {
+    transform: scale(0.98);
+}
+
+.public-form .status-card {
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    border: 1px solid transparent;
+}
+
+.public-form .status-card.success {
+    background: #ecfdf3;
+    color: #166534;
+    border-color: #a7f3d0;
+}
+
+.public-form .status-card.error {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.public-form .loading-state {
+    text-align: center;
+    color: #6b7280;
+    padding: 24px 12px;
+}
+
+.public-form .empty-state {
+    text-align: center;
+    color: #6b7280;
+    padding: 24px 12px;
+    border: 1px dashed #e5e7eb;
+    border-radius: 18px;
+    background: #fafaff;
+}
+
+@keyframes publicFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 700px) {
+    .public-form-shell {
+        padding: 18px 12px 32px;
+    }
+
+    .public-form {
+        padding: 22px;
+        border-radius: 20px;
+    }
+
+    .public-form-header h1 {
+        font-size: 24px;
+    }
+
+    .public-field {
+        padding: 16px;
+    }
+}
