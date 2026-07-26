@@ -1,11 +1,23 @@
 import API from "../services/api";
 
-export const getFormVersions = (formId) => API.get(`/forms/${formId}/versions`);
-export const publishFormApi = (formId) => API.post(`/forms/${formId}/publish`);
-export const archiveFormApi = (formId) => API.post(`/forms/${formId}/archive`);
-export const createNewDraftApi = (formId) => API.post(`/forms/${formId}/draft`);
+// =========================
+// Form APIs
+// =========================
 
-export const getDraftApi = (formId) => API.get(`/forms/${formId}/draft`);
+export const getFormVersions = (formId) =>
+    API.get(`/forms/${formId}/versions`);
+
+export const publishFormApi = (formId) =>
+    API.post(`/forms/${formId}/publish`);
+
+export const archiveFormApi = (formId) =>
+    API.post(`/forms/${formId}/archive`);
+
+export const createNewDraftApi = (formId) =>
+    API.post(`/forms/${formId}/draft`);
+
+export const getDraftApi = (formId) =>
+    API.get(`/forms/${formId}/draft`);
 
 export const generateShareableLinkApi = (formId) =>
     API.post(`/forms/${formId}/generate-link`);
@@ -13,4 +25,37 @@ export const generateShareableLinkApi = (formId) =>
 export const getPublicFormApi = (token) =>
     API.get(`/public/forms/${token}`);
 
+// =========================
+// Conditional Rule APIs
+// =========================
+
+export const createConditionalRuleApi = (formId, ruleData) =>
+    API.post(`/forms/${formId}/rules`, ruleData);
+
+export const getConditionalRulesApi = (formId) =>
+    API.get(`/forms/${formId}/rules`);
+
+export const deleteConditionalRuleApi = (formId, ruleId) =>
+    API.delete(`/forms/${formId}/rules/${ruleId}`);
+
+export const evaluateRulesApi = (formId, submittedValues) =>
+    API.post(`/forms/${formId}/evaluate`, {
+        submitted_values: submittedValues,
+    });
+export const submitFormApi = (
+    formId,
+    submittedValues,
+    idempotencyKey
+) =>
+    API.post(
+        `/forms/${formId}/submit`,
+        {
+            submitted_values: submittedValues,
+        },
+        {
+            headers: {
+                "Idempotency-Key": idempotencyKey,
+            },
+        }
+    );
 export default API;

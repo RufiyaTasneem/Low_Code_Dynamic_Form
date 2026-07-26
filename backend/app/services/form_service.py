@@ -1,27 +1,46 @@
 import copy
+import logging
+from sqlalchemy import or_
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from app.models.form import Form
 from app.models.field import Field
+from app.models.response_value import ResponseValue
+from app.models.conditional_rule import ConditionalRule
 from app.services.field_type_service import get_field_types
 from datetime import datetime
 
 from app.models.form_version import FormVersion
 
+logger = logging.getLogger(__name__)
+
 # -----------------------------
 # Create Form
 # -----------------------------
-def create_form(db: Session, title: str, description: str = None):
+def create_form(
+    db: Session,
+    title: str,
+    description: str = None,
+    owner_id: int = None,
+):
     form = Form(
-        title=title,
-        description=description,
-    )
+    title=title,
+    description=description,
+    owner_id=owner_id,
+)
 
     db.add(form)
     db.commit()
     db.refresh(form)
 
     return form
+def get_user_forms(db: Session, user_id: int):
+    return (
+        db.query(Form)
+        .filter(Form.owner_id == user_id)
+        .all()
+    )
 
 def _build_form_snapshot(db: Session, form_id: int):
     form = db.query(Form).filter(Form.id == form_id).first()
@@ -44,6 +63,7 @@ def _build_form_snapshot(db: Session, form_id: int):
         "description": form.description,
         "fields": [
             {
+                "id": field.id,
                 "label": field.label,
                 "type": field.type,
                 "field_order": field.field_order,
@@ -248,7 +268,6 @@ def get_draft(
 def validate_field_config(field_type_name, config):
     field_types = get_field_types()
 
-    # Find matching field type
     field_type = next(
         (field for field in field_types if field.type == field_type_name),
         None,
@@ -260,16 +279,13 @@ def validate_field_config(field_type_name, config):
             detail="Invalid field type",
         )
 
-    # Allowed configuration keys
     allowed_configs = {
         cfg.name
         for cfg in field_type.config
     }
 
-    # Received configuration keys
     received_configs = set(config.keys())
 
-    # Invalid keys
     invalid_configs = received_configs - allowed_configs
 
     if invalid_configs:
@@ -377,10 +393,34 @@ def delete_field(
             detail="Field not found",
         )
 
-    db.delete(field)
-    db.flush()
-    _update_draft_snapshot(db, form_id)
-    db.commit()
+    try:
+        # Remove dependent response values first, if any exist.
+        db.query(ResponseValue).filter(ResponseValue.field_id == field_id).delete(synchronize_session=False)
+
+        # Remove any conditional rules that target or trigger this field.
+        db.query(ConditionalRule).filter(
+            or_(
+                ConditionalRule.trigger_field_id == field_id,
+                ConditionalRule.target_field_id == field_id,
+            )
+        ).delete(synchronize_session=False)
+
+        db.delete(field)
+        db.flush()
+        _update_draft_snapshot(db, form_id)
+        db.commit()
+    except SQLAlchemyError as exc:
+        db.rollback()
+        logger.exception(
+            "Failed to delete field %s for form %s: %s",
+            field_id,
+            form_id,
+            exc,
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to delete field: {str(exc)}",
+        )
 
     return {
         "message": "Field deleted successfully"

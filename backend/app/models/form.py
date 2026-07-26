@@ -1,9 +1,8 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.config.database import Base
-from app.models.field import Field
-from app.models.form_version import FormVersion
+
 
 class Form(Base):
     __tablename__ = "forms"
@@ -12,15 +11,27 @@ class Form(Base):
     title = Column(String(255), nullable=False)
     description = Column(String(500), nullable=True)
 
+    owner_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False,
+    )
+
+    owner = relationship(
+        "User",
+        back_populates="forms",
+    )
+
     fields = relationship(
         "Field",
         back_populates="form",
         cascade="all, delete-orphan",
         order_by="Field.field_order",
     )
+
     versions = relationship(
-    "FormVersion",
-    back_populates="form",
-    cascade="all, delete-orphan",
-    order_by="FormVersion.version",
-)
+        "FormVersion",
+        back_populates="form",
+        cascade="all, delete-orphan",
+        order_by="FormVersion.version",
+    )

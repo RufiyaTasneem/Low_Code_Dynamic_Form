@@ -9,12 +9,16 @@
 
 .public-form {
     width: 100%;
-    max-width: 860px;
+    max-width: 950px;
+    /* was 860px */
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 24px;
     box-shadow: 0 18px 45px rgba(15, 23, 42, 0.07);
-    padding: 36px;
+
+    padding: 50px;
+    /* was 36px */
+
     animation: publicFadeIn 0.35s ease;
 }
 
@@ -48,16 +52,20 @@
 
 .public-fields {
     display: grid;
-    gap: 18px;
+    gap: 28px;
+    /* was 18px */
 }
 
 .public-field {
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 18px;
-    padding: 20px;
+
+    padding: 28px;
+    /* was 20px */
+
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform .2s ease, box-shadow .2s ease;
 }
 
 .public-field:hover {
@@ -262,16 +270,37 @@
         padding: 18px 12px 32px;
     }
 
-    .public-form {
-        padding: 22px;
-        border-radius: 20px;
-    }
-
-    .public-form-header h1 {
-        font-size: 24px;
+    @media (max-width: 768px) {
+        .public-form {
+            padding: 24px;
+            border-radius: 20px;
+        }
     }
 
     .public-field {
         padding: 16px;
     }
+}
+
+.field-error {
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+.public-field {
+    margin-bottom: 20px;
+}
+
+.public-field input,
+.public-field select,
+.public-field textarea {
+    width: 100%;
+}
+
+.required-mark {
+    color: #dc2626;
+    margin-left: 4px;
 }

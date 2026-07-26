@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 print(">>> form.py imported <<<")
 from app.config.database import SessionLocal
 from app.schemas.form import FieldReorder
 from app.services.form_service import reorder_fields
-
+from app.schemas.response import FormSubmission
+from app.services.response_service import submit_form
+from app.routers.auth import get_current_user
+from app.models.user import User
 from app.schemas.form import (
     FormCreate,
     FormResponse,
@@ -25,6 +28,7 @@ from app.services.form_service import (
     get_form_versions,
     get_draft,
     get_version,
+    get_user_forms,
 )
 from app.services.form_link_service import (
     generate_link,
@@ -45,15 +49,19 @@ def get_db():
 
 
 @router.post("/", response_model=FormResponse)
+
 def create_new_form(
     form: FormCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
+    
     return create_form(
-        db,
-        form.title,
-        form.description,
-    )
+    db,
+    form.title,
+    form.description,
+    current_user.id,
+)
 
 
 @router.post("/{form_id}/fields", response_model=FieldResponse)
@@ -146,6 +154,15 @@ def archive_form_api(
     db: Session = Depends(get_db),
 ):
     return archive_form(db, form_id)
+@router.get("/my", response_model=list[FormResponse])
+def my_forms(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return get_user_forms(
+        db,
+        current_user.id,
+    )
 @router.get("/{form_id}", response_model=FormResponse)
 def get_form_details(
     form_id: int,
@@ -204,3 +221,16 @@ def generate_shareable_link(
     db: Session = Depends(get_db),
 ):
     return generate_link(db, form_id)
+@router.post("/{form_id}/submit")
+def submit_form_api(
+    form_id: int,
+    payload: FormSubmission,
+    db: Session = Depends(get_db),
+    idempotency_key: str | None = Header(default=None),
+):
+    return submit_form(
+        db=db,
+        form_id=form_id,
+        submitted_values=payload.submitted_values,
+        idempotency_key=idempotency_key,
+    )
