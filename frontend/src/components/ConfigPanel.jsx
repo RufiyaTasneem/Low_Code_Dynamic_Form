@@ -31,6 +31,37 @@ function ConfigPanel({
         );
     }
 
+    const parseListValues = (value) => {
+        if (value === undefined || value === null || value === "") {
+            return [];
+        }
+
+        return String(value)
+            .split(/[,\n]+/)
+            .map((item) => item.trim())
+            .filter(Boolean);
+    };
+
+    const formatListValue = (value) => {
+        if (Array.isArray(value)) {
+            return value.join("\n");
+        }
+
+        return value ?? "";
+    };
+
+    const normalizeConfig = (nextConfig) => {
+        const normalized = { ...nextConfig };
+
+        (fieldDefinition.config || [])
+            .filter((item) => item.type === "list")
+            .forEach((item) => {
+                normalized[item.name] = parseListValues(normalized[item.name]);
+            });
+
+        return normalized;
+    };
+
     const handleChange = (name, value, type) => {
         setConfig((prev) => {
             const nextConfig = { ...prev };
@@ -38,10 +69,7 @@ function ConfigPanel({
             if (type === "boolean") {
                 nextConfig[name] = Boolean(value);
             } else if (type === "list") {
-                nextConfig[name] = value
-                    .split(",")
-                    .map((item) => item.trim())
-                    .filter(Boolean);
+                nextConfig[name] = value;
             } else {
                 nextConfig[name] = value;
             }
@@ -51,23 +79,17 @@ function ConfigPanel({
     };
 
     const handleAdd = () => {
-        console.log("ConfigPanel handleAdd", {
-            selectedField,
-            label,
-            config,
-            isLocked,
-        });
-
         if (isLocked) return;
+
+        const normalizedConfig = normalizeConfig(config);
 
         const fieldData = {
             label,
             type: selectedField.type,
             field_order: 1,
-            config,
+            config: normalizedConfig,
         };
 
-        console.log("ConfigPanel sending fieldData", fieldData);
         onAddField(fieldData);
 
         setLabel("");
@@ -96,6 +118,7 @@ function ConfigPanel({
                 <input
                     type="checkbox"
                     checked={Boolean(currentValue)}
+                    disabled={isLocked}
                     onChange={(e) => handleChange(item.name, e.target.checked, item.type)}
                 />
             );
@@ -105,7 +128,8 @@ function ConfigPanel({
             return (
                 <textarea
                     placeholder={item.label}
-                    value={Array.isArray(currentValue) ? currentValue.join(", ") : currentValue || ""}
+                    value={formatListValue(currentValue)}
+                    disabled={isLocked}
                     onChange={(e) => handleChange(item.name, e.target.value, item.type)}
                 />
             );
@@ -117,6 +141,7 @@ function ConfigPanel({
                     type="number"
                     placeholder={item.label}
                     value={currentValue ?? ""}
+                    disabled={isLocked}
                     onChange={(e) => handleChange(item.name, e.target.value, item.type)}
                 />
             );
@@ -128,6 +153,7 @@ function ConfigPanel({
                     type="date"
                     placeholder={item.label}
                     value={currentValue ?? ""}
+                    disabled={isLocked}
                     onChange={(e) => handleChange(item.name, e.target.value, item.type)}
                 />
             );
@@ -138,6 +164,7 @@ function ConfigPanel({
                 type="text"
                 placeholder={item.label}
                 value={currentValue ?? ""}
+                disabled={isLocked}
                 onChange={(e) => handleChange(item.name, e.target.value, item.type)}
             />
         );
@@ -156,6 +183,7 @@ function ConfigPanel({
                 <input
                     type="text"
                     value={label}
+                    disabled={isLocked}
                     onChange={(e) => setLabel(e.target.value)}
                     placeholder="Enter field label"
                 />

@@ -64,73 +64,98 @@ def get_field_types():
     ],
 ),
 
-        FieldType(
-            type="dropdown",
-            label="Dropdown",
-            config=[
-                ConfigProperty(
-                    name="options",
-                    type="list",
-                    label="Options"
-                ),
-            ],
+     FieldType(
+    type="dropdown",
+    label="Dropdown",
+    config=[
+        ConfigProperty(
+            name="options",
+            type="list",
+            label="Options"
         ),
+        ConfigProperty(
+            name="required",
+            type="boolean",
+            label="Required"
+        ),
+    ],
+),
+
+      FieldType(
+    type="checkbox",
+    label="Checkbox",
+    config=[
+        ConfigProperty(
+            name="options",
+            type="list",
+            label="Options"
+        ),
+        ConfigProperty(
+            name="required",
+            type="boolean",
+            label="Required"
+        ),
+    ],
+),
 
         FieldType(
-            type="checkbox",
-            label="Checkbox",
-            config=[
-                ConfigProperty(
-                    name="options",
-                    type="list",
-                    label="Options"
-                ),
-            ],
-        ),
-
-        FieldType(
+    type="date",
+    label="Date",
+    config=[
+        ConfigProperty(
+            name="min_date",
             type="date",
-            label="Date",
-            config=[
-                ConfigProperty(
-                    name="min_date",
-                    type="date",
-                    label="Minimum Date"
-                ),
-                ConfigProperty(
-                    name="max_date",
-                    type="date",
-                    label="Maximum Date"
-                ),
-            ],
+            label="Minimum Date"
         ),
+        ConfigProperty(
+            name="max_date",
+            type="date",
+            label="Maximum Date"
+        ),
+        ConfigProperty(
+            name="required",
+            type="boolean",
+            label="Required"
+        ),
+    ],
+),
+
+      FieldType(
+    type="file",
+    label="File Upload",
+    config=[
+        ConfigProperty(
+            name="allowed_types",
+            type="list",
+            label="Allowed File Types"
+        ),
+        ConfigProperty(
+            name="max_size",
+            type="number",
+            label="Maximum Size (MB)"
+        ),
+        ConfigProperty(
+            name="required",
+            type="boolean",
+            label="Required"
+        ),
+    ],
+),
 
         FieldType(
-            type="file",
-            label="File Upload",
-            config=[
-                ConfigProperty(
-                    name="file_types",
-                    type="list",
-                    label="Allowed File Types"
-                ),
-                ConfigProperty(
-                    name="max_size",
-                    type="number",
-                    label="Maximum Size (MB)"
-                ),
-            ],
+    type="rating",
+    label="Rating",
+    config=[
+        ConfigProperty(
+            name="max_rating",
+            type="number",
+            label="Maximum Rating"
         ),
-
-        FieldType(
-            type="rating",
-            label="Rating",
-            config=[
-                ConfigProperty(
-                    name="max_rating",
-                    type="number",
-                    label="Maximum Rating"
-                ),
-            ],
+        ConfigProperty(
+            name="required",
+            type="boolean",
+            label="Required"
         ),
+    ],
+),
     ]

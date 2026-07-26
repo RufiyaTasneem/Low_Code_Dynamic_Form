@@ -1,7 +1,4 @@
-/* ===========================
-   Global
-=========================== */
-
+/* =========================== Global =========================== */
 * {
     margin: 0;
     padding: 0;
@@ -10,7 +7,7 @@
 }
 
 body {
-    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+    background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.08), transparent 35%), radial-gradient(circle at top right, rgba(139, 92, 246, 0.06), transparent 30%), #f8fafc;
     color: #111827;
 }
 
@@ -21,10 +18,83 @@ select {
     font: inherit;
 }
 
-/* ===========================
-   Dashboard Shell
-=========================== */
+.auth-page,
+.public-form-shell,
+.dashboard-shell {
+    min-height: 100vh;
+}
 
+.auth-page {
+    display: grid;
+    place-items: center;
+    padding: 40px 20px;
+    background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.08), transparent 35%), radial-gradient(circle at top right, rgba(139, 92, 246, 0.06), transparent 30%), #f8fafc;
+}
+
+.auth-card {
+    width: min(480px, 100%);
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(229, 231, 235, 0.7);
+    border-radius: 28px;
+    padding: 36px 34px;
+    box-shadow: 0 30px 80px rgba(15, 23, 42, 0.08);
+}
+
+.auth-card h2 {
+    font-size: 30px;
+    margin-bottom: 22px;
+    color: #111827;
+}
+
+.auth-card form {
+    display: grid;
+    gap: 16px;
+}
+
+.auth-card input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 16px;
+    background: white;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-card input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+}
+
+.auth-card button {
+    width: 100%;
+    padding: 14px 18px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-card button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 30px rgba(79, 70, 229, 0.18);
+}
+
+.auth-card .error {
+    color: #dc2626;
+    margin-bottom: 12px;
+}
+
+.auth-card>button {
+    margin-top: 16px;
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+/* =========================== Dashboard Shell =========================== */
 .dashboard-shell {
     display: flex;
     min-height: 100vh;
@@ -94,19 +164,18 @@ select {
     padding: 32px;
 }
 
-/* ===========================
-   Header
-=========================== */
-
+/* =========================== Header =========================== */
 .form-header {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 24px;
-    padding: 24px 28px;
-    box-shadow:
-        0 10px 30px rgba(2, 6, 23, .05),
-        0 2px 8px rgba(2, 6, 23, .04);
-    margin-bottom: 24px;
+    background: rgba(255, 255, 255, .85);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, .6);
+    border-radius: 28px;
+    padding: 34px;
+    box-shadow: 0 25px 60px rgba(15, 23, 42, .08), 0 8px 24px rgba(15, 23, 42, .04);
+}
+
+.form-header:hover {
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08), 0 8px 18px rgba(15, 23, 42, 0.05);
 }
 
 .header-top {
@@ -146,7 +215,8 @@ select {
 .delete-btn {
     border: none;
     border-radius: 12px;
-    padding: 11px 16px;
+    padding: 13px 22px;
+    border-radius: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -183,7 +253,7 @@ select {
 }
 
 .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 12px;
 }
 
 .form-group label {
@@ -231,14 +301,18 @@ select {
     font-weight: 600;
 }
 
-/* ===========================
-   Main Layout
-=========================== */
-
+/* =========================== Main Layout =========================== */
 .app {
     display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 24px;
+    grid-template-columns: 240px
+        /* Field Types */
+        300px
+        /* Config */
+        minmax(520px, 1.8fr)
+        /* Form Canvas */
+        280px;
+    /* Rule Flow */
+    gap: 20px;
     align-items: start;
 }
 
@@ -246,20 +320,55 @@ select {
     grid-template-columns: 1fr;
 }
 
-.app.preview-mode .palette {
+.app.preview-mode .builder-left-column,
+.app.preview-mode .builder-center-column,
+.app.preview-mode .builder-rule-column {
     display: none;
 }
 
-.palette,
-.config {
-    background: white;
-    border-radius: 24px;
-    padding: 28px;
-    border: 1px solid #e5e7eb;
+.builder-canvas-column {
+    width: 100%;
+}
 
-    box-shadow:
-        0 10px 30px rgba(2, 6, 23, 0.05),
-        0 2px 8px rgba(2, 6, 23, 0.04);
+.builder-canvas-body {
+    width: 100%;
+}
+
+.builder-rule-column {
+    width: 100%;
+}
+
+.rule-flow-container {
+    width: 100%;
+}
+
+.builder-left-column,
+.builder-center-column,
+.builder-canvas-column,
+.builder-rule-column {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 700px;
+}
+
+.palette,
+.config,
+.builder-canvas-column,
+.builder-rule-column {
+    background: white;
+    border-radius: 18px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(2, 6, 23, 0.04);
+}
+
+.builder-left-column>.palette,
+.builder-center-column>.config,
+.builder-rule-column>.rule-flow-container {
+    flex: 1;
+    overflow-y: auto;
 }
 
 .palette h2,
@@ -269,31 +378,92 @@ select {
     color: #111827;
 }
 
-/* ===========================
-   Field Palette
-=========================== */
+.builder-canvas-column {
+    padding: 16px 20px;
+}
 
+.builder-canvas-header,
+.builder-rule-header {
+    padding-bottom: 16px;
+    border-bottom: 1px solid #eef2ff;
+    margin-bottom: 18px;
+}
+
+.builder-canvas-header h2,
+.builder-rule-header h2 {
+    font-size: 22px;
+    color: #111827;
+    margin-bottom: 6px;
+}
+
+.builder-canvas-subtitle {
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.builder-canvas-body {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.rule-flow-container {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 0;
+}
+
+.rule-flow-container h3 {
+    margin-bottom: 18px;
+}
+
+.canvas-empty-state {
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 12px;
+    padding: 36px 24px;
+    border: 2px dashed #c7d2fe;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #fafaff 0%, #f8faff 100%);
+    color: #6b7280;
+}
+
+.canvas-empty-icon {
+    font-size: 38px;
+    margin-bottom: 8px;
+}
+
+.canvas-empty-state h3 {
+    color: #111827;
+    font-size: 18px;
+}
+
+.canvas-empty-state p {
+    max-width: 360px;
+    line-height: 1.6;
+}
+
+/* =========================== Field Palette =========================== */
 .field-card {
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    background: linear-gradient(180deg, #ffffff 0%, #fff 100%);
     border: 1px solid #e5e7eb;
     border-radius: 18px;
-    padding: 20px;
+    padding: 16px;
     margin-bottom: 14px;
     cursor: pointer;
-
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease,
-        border-color 0.25s ease;
+    width: 100%;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .field-card:hover {
     transform: translateY(-4px);
-
     border-color: #a5b4fc;
-
-    box-shadow:
-        0 18px 40px rgba(99, 102, 241, 0.16);
+    box-shadow: 0 18px 40px rgba(99, 102, 241, 0.16);
 }
 
 .field-card h3 {
@@ -307,10 +477,7 @@ select {
     font-size: 13px;
 }
 
-/* ===========================
-   Configuration Panel
-=========================== */
-
+/* =========================== Configuration Panel =========================== */
 .no-selection {
     padding: 24px 8px;
     text-align: center;
@@ -322,44 +489,92 @@ select {
     width: 100%;
 }
 
-/* ===========================
-   Canvas Cards
-=========================== */
-
+/* =========================== Canvas Cards =========================== */
 .canvas-field {
     background: white;
     border: 1px solid #eef2ff;
     border-radius: 18px;
-    padding: 20px;
-    margin-bottom: 18px;
-
-    box-shadow:
-        0 8px 20px rgba(15, 23, 42, 0.04);
-
-    transition:
-        box-shadow 0.25s ease,
-        transform 0.25s ease,
-        border-color 0.25s ease;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
 }
 
 .canvas-field:hover {
     transform: translateY(-2px);
-
     border-color: #6366f1;
-
-    box-shadow:
-        0 18px 35px rgba(99, 102, 241, 0.12);
+    box-shadow: 0 18px 35px rgba(99, 102, 241, 0.12);
 }
 
-.canvas-field h3 {
-    margin-bottom: 12px;
+.canvas-field-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.canvas-field-drag {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #6366f1;
+    min-width: 56px;
+}
+
+.drag-handle {
+    font-size: 18px;
+    letter-spacing: 1px;
+    cursor: grab;
+}
+
+.field-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: #eef2ff;
+    font-size: 18px;
+}
+
+.canvas-field-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.canvas-field-content h3 {
+    margin: 0 0 4px;
     color: #111827;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.canvas-field-content p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 13px;
+    text-transform: capitalize;
+}
+
+.canvas-field-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.canvas-action-btn {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .edit-btn {
     background: #eef2ff;
     color: #4338ca;
-    margin-right: 8px;
 }
 
 .delete-btn {
@@ -375,10 +590,7 @@ select {
     background: #fee2e2;
 }
 
-/* ===========================
-   Preview
-=========================== */
-
+/* =========================== Preview =========================== */
 .preview-canvas {
     width: 100%;
     min-width: 0;
@@ -387,9 +599,9 @@ select {
 .preview-form {
     background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
     border: 1px solid #e5e7eb;
-    border-radius: 24px;
-    padding: 28px;
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06);
 }
 
 .preview-header {
@@ -462,19 +674,14 @@ select {
     font-size: 16px;
 }
 
-/* ===========================
-   Shareable Link Card
-=========================== */
-
+/* =========================== Shareable Link Card =========================== */
 .share-link-card {
     background: white;
-    border-radius: 24px;
+    border-radius: 20px;
     border: 1px solid #e5e7eb;
     margin-bottom: 24px;
-    padding: 24px 28px;
-    box-shadow:
-        0 10px 30px rgba(2, 6, 23, .05),
-        0 2px 8px rgba(2, 6, 23, .04);
+    padding: 20px 22px;
+    box-shadow: 0 8px 24px rgba(2, 6, 23, .05), 0 2px 6px rgba(2, 6, 23, .04);
 }
 
 .share-link-header {
@@ -505,10 +712,7 @@ select {
     flex-wrap: wrap;
 }
 
-/* ===========================
-   Responsive
-=========================== */
-
+/* =========================== Responsive =========================== */
 @media (max-width: 1100px) {
     .dashboard-shell {
         flex-direction: column;
@@ -522,6 +726,21 @@ select {
 
     .app {
         grid-template-columns: 1fr;
+    }
+
+    .builder-left-column,
+    .builder-center-column,
+    .builder-canvas-column,
+    .builder-rule-column,
+    .palette,
+    .config {
+        width: 100%;
+    }
+
+    .builder-canvas-column,
+    .builder-rule-column {
+        min-height: 600px;
+        max-height: none;
     }
 
     .form-grid {
@@ -555,6 +774,20 @@ select {
     .share-link-input {
         min-width: 0;
     }
+
+    /* Mobile: stack all builder panels */
+    .app {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .builder-left-column,
+    .builder-center-column,
+    .builder-canvas-column,
+    .builder-rule-column {
+        width: 100%;
+        max-height: none;
+    }
 }
 
 button,
@@ -566,12 +799,7 @@ select,
 .palette,
 .config,
 .nav-item {
-    transition:
-        background 0.2s ease,
-        color 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        transform 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .form-header,
@@ -623,19 +851,14 @@ select,
     background: #7c6dff;
 }
 
-/* ===========================
-   Version History
-=========================== */
-
+/* =========================== Version History =========================== */
 .version-history {
     background: white;
-    border-radius: 24px;
+    border-radius: 20px;
     border: 1px solid #e5e7eb;
     margin-bottom: 24px;
-    padding: 24px 28px;
-    box-shadow:
-        0 10px 30px rgba(2, 6, 23, .05),
-        0 2px 8px rgba(2, 6, 23, .04);
+    padding: 20px 22px;
+    box-shadow: 0 8px 24px rgba(2, 6, 23, .05), 0 2px 6px rgba(2, 6, 23, .04);
 }
 
 .version-history-header {
@@ -758,4 +981,286 @@ select,
     padding: 12px 16px;
     border-radius: 14px;
     border: 1px solid #fde68a;
+}
+
+.rule-badge {
+    margin-left: 8px;
+    background: #f59e0b;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.rule-flow-container {
+    margin-top: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.rule-flow-container h3 {
+    margin-bottom: 18px;
+}
+
+.no-rules {
+    color: gray;
+}
+
+.rule-flow-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 18px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+}
+
+.rule-node {
+    background: #eef4ff;
+    color: #2563eb;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.rule-condition {
+    margin: 12px 0;
+    color: #555;
+}
+
+.rule-action {
+    display: inline-block;
+    background: #10b981;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.rule-arrow {
+    font-size: 22px;
+    color: #999;
+    margin: 8px 0;
+}
+
+.upload-progress {
+    width: 100%;
+    height: 6px;
+    background: #eef2ff;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 14px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #4f46e5);
+    border-radius: 999px;
+    transition: width .35s ease;
+}
+
+.uploaded-file {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 18px;
+    padding: 18px;
+    border: 2px solid #e0e7ff;
+    border-radius: 16px;
+    background: #fafbff;
+}
+
+.uploaded-file p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.upload-status p {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #10b981;
+    font-weight: 600;
+}
+
+.uploaded-file button {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 10px;
+    background: #fff;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+    transition: .2s;
+}
+
+.uploaded-file button:hover {
+    background: #fee2e2;
+}
+
+.upload-box {
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 18px;
+
+    padding: 35px;
+
+    border: 2px dashed #c7d2fe;
+
+    border-radius: 18px;
+
+    cursor: pointer;
+
+    background: #fafbff;
+
+    transition: .25s;
+}
+
+.upload-box:hover {
+
+    background: #eef2ff;
+}
+
+.upload-icon {
+
+    font-size: 42px;
+}
+
+.file-card {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 24px;
+
+    border-radius: 18px;
+
+    border: 2px solid #dbe4ff;
+
+    background: white;
+
+    margin-top: 18px;
+}
+
+.file-left {
+
+    display: flex;
+
+    gap: 18px;
+
+    align-items: center;
+}
+
+.file-icon {
+
+    width: 70px;
+
+    height: 70px;
+
+    border-radius: 12px;
+
+    background: #eef2ff;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    font-size: 40px;
+}
+
+.file-info {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    width: 420px;
+}
+
+.file-info h4 {
+
+    margin: 0;
+
+    font-size: 18px;
+
+    font-weight: 600;
+}
+
+.success {
+
+    color: #10b981;
+
+    font-weight: 600;
+}
+
+.upload-progress {
+
+    height: 8px;
+
+    width: 100%;
+
+    background: #edf2ff;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+}
+
+.progress-bar {
+
+    height: 100%;
+
+    background: #5b5ef7;
+
+    border-radius: 20px;
+}
+
+.delete-btn {
+
+    width: 48px;
+
+    height: 48px;
+
+    border: none;
+
+    background: white;
+
+    border-radius: 12px;
+
+    color: #ef4444;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+
+    cursor: pointer;
+
+    font-size: 22px;
+}
+
+.submit-loader {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.gear-big {
+    color: #2563eb;
+    animation: rotateGear 1s linear infinite;
 }

@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-function SortableField({ field, index, fieldTypes, onEdit, onDelete, isLocked }) {
+function SortableField({ field, index, fieldTypes, onEdit, onDelete, isLocked, rules = [], }) {
     const {
         attributes,
         listeners,
@@ -19,6 +19,26 @@ function SortableField({ field, index, fieldTypes, onEdit, onDelete, isLocked })
     };
 
     const dragProps = isLocked ? {} : { ...attributes, ...listeners };
+    const hasRule = rules.some(
+        (rule) =>
+            rule.trigger_field_id === field.id ||
+            rule.target_field_id === field.id
+    );
+    const getFieldIcon = (type) => {
+        const icons = {
+            text: "📝",
+            email: "📧",
+            number: "🔢",
+            date: "📅",
+            textarea: "🗒️",
+            dropdown: "🔽",
+            checkbox: "☑️",
+            file: "📁",
+            rating: "⭐",
+        };
+
+        return icons[type] || "✦";
+    };
 
     return (
         <div
@@ -27,52 +47,58 @@ function SortableField({ field, index, fieldTypes, onEdit, onDelete, isLocked })
             {...dragProps}
             className="canvas-field"
         >
-            <h3>Field #{index + 1}</h3>
-
-            <div className="form-group">
-                <label>Label</label>
-                <input type="text" value={field.label} readOnly />
-            </div>
-
-            <div className="form-group">
-                <label>Type</label>
-                <input type="text" value={field.type} readOnly />
-            </div>
-
-            {Object.entries(field.config || {}).map(([key, value]) => (
-                <div className="form-group" key={key}>
-                    <label>{key}</label>
-                    <input type="text" value={String(value)} readOnly />
+            <div className="canvas-field-main">
+                <div className="canvas-field-drag">
+                    <span className="drag-handle">⋮⋮</span>
+                    <span className="field-icon" aria-hidden="true">
+                        {getFieldIcon(field.type)}
+                    </span>
                 </div>
-            ))}
 
-            <button
-                type="button"
-                className="edit-btn"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(field);
-                }}
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                disabled={isLocked}
-            >
-                Edit
-            </button>
+                <div className="canvas-field-content">
+                    <h3>
+                        {field.label || `Field ${index + 1}`}
+                        {hasRule && (
+                            <span className="rule-badge">
+                                ⚡ Rule
+                            </span>
+                        )}
+                    </h3>
+                    <p>{field.type || "field"}</p>
+                </div>
 
-            <button
-                type="button"
-                className="delete-btn"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(field.id);
-                }}
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                disabled={isLocked}
-            >
-                Delete
-            </button>
+                <div className="canvas-field-actions">
+                    <button
+                        type="button"
+                        className="canvas-action-btn edit-btn"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(field);
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        disabled={isLocked}
+                        aria-label="Edit field"
+                    >
+                        ✏️
+                    </button>
+
+                    <button
+                        type="button"
+                        className="canvas-action-btn delete-btn"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(field.id);
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        disabled={isLocked}
+                        aria-label="Delete field"
+                    >
+                        🗑️
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }
