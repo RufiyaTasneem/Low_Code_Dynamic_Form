@@ -1,0 +1,45 @@
+:root {
+    color-scheme: light;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    color: var(--text);
+    background: var(--surface);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background: linear-gradient(180deg, var(--surface) 0%, var(--surface-muted) 100%);
+    color: var(--text);
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+.landing-page-shell {
+    min-height: 100vh;
+}
+
+main {
+    overflow: hidden;
+}
+
+section {
+    scroll-margin-top: 84px;
+}
+
+@media (max-width: 640px) {
+    .landing-page-shell {
+        padding: 0;
+    }
+}

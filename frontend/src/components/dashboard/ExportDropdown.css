@@ -1,0 +1,91 @@
+.export-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.export-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    background: var(--accent);
+    color: var(--button-text);
+
+    border: none;
+    border-radius: 12px;
+
+    padding: 12px 22px;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: all .25s ease;
+}
+
+.export-btn:hover {
+    background: var(--accent-2);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(91, 94, 246, .25);
+}
+
+.export-btn:disabled {
+    background: var(--accent-soft);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+
+    width: 230px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 14px;
+
+    overflow: hidden;
+
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .12);
+
+    z-index: 1000;
+}
+
+.dropdown-menu button {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 14px 18px;
+
+    background: var(--surface);
+    border: none;
+
+    text-align: left;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    color: var(--text-subtle);
+
+    cursor: pointer;
+
+    transition: background .2s;
+}
+
+.dropdown-menu button:hover {
+    background: var(--surface-muted);
+}
+
+.dropdown-menu button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}

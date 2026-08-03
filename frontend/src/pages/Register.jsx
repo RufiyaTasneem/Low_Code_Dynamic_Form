@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
+import AuthLayout from "../components/auth/AuthLayout";
+import "../components/auth/Auth.css";
 import { register } from "../services/authService";
 
 export default function Register() {
@@ -12,6 +15,7 @@ export default function Register() {
     });
 
     const [error, setError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
         setForm({
@@ -55,13 +59,11 @@ export default function Register() {
         e.preventDefault();
 
         try {
-            const response = await register(form);
+            await register(form);
 
-            navigate("/submission-success", {
+            navigate("/login", {
                 state: {
-                    responseId: response?.data?.response_id,
-                    submittedAt: response?.data?.submitted_at,
-                    formTitle: response?.data?.form_title,
+                    message: "Account created successfully. Please sign in.",
                 },
             });
         } catch (err) {
@@ -71,18 +73,20 @@ export default function Register() {
 
     return (
         <div className="auth-page">
-            <div className="auth-card">
-
-                <h2>Create Account</h2>
-
+            <AuthLayout
+                title="Create your account"
+                subtitle="Start building forms in minutes."
+                footerText="Already have an account?"
+                footerLinkText="Sign In"
+                footerHref="/login"
+            >
                 {error && <p className="error">{error}</p>}
 
-                <form onSubmit={handleSubmit}>
-
+                <form className="auth-form" onSubmit={handleSubmit}>
                     <input
                         type="text"
                         name="username"
-                        placeholder="Username"
+                        placeholder="Name"
                         value={form.username}
                         onChange={handleChange}
                     />
@@ -95,25 +99,34 @@ export default function Register() {
                         onChange={handleChange}
                     />
 
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        value={form.password}
-                        onChange={handleChange}
-                    />
+                    <div className="password-row">
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            placeholder="Password"
+                            value={form.password}
+                            onChange={handleChange}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            aria-label="Toggle password visibility"
+                        >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    </div>
 
-                    <button type="submit">
-                        Register
+                    <button className="auth-submit-btn" type="submit">
+                        Create Account
                     </button>
-
                 </form>
 
-                <button type="button" onClick={() => navigate("/login")}>
-                    Back to Login
-                </button>
+                <div className="auth-divider">or</div>
 
-            </div>
+                <button className="auth-secondary-btn" type="button" onClick={() => navigate("/login")}>
+                    Back to Sign In
+                </button>
+            </AuthLayout>
         </div>
     );
 }

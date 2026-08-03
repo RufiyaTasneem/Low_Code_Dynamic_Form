@@ -58,4 +58,6 @@ export const submitFormApi = (
             },
         }
     );
+export const getMyFormsApi = () =>
+    API.get("/forms/my");
 export default API;

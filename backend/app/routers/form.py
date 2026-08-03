@@ -7,7 +7,11 @@ from app.services.form_service import reorder_fields
 from app.schemas.response import FormSubmission
 from app.services.response_service import submit_form
 from app.routers.auth import get_current_user
+from app.services.analytics_service import get_form_analytics
+from fastapi.responses import StreamingResponse, JSONResponse
+from app.services.export_service import export_form_responses
 from app.models.user import User
+from app.services.response_browser_service import get_form_responses as get_form_responses_service
 from app.schemas.form import (
     FormCreate,
     FormResponse,
@@ -233,4 +237,46 @@ def submit_form_api(
         form_id=form_id,
         submitted_values=payload.submitted_values,
         idempotency_key=idempotency_key,
+    )
+@router.get("/{form_id}/analytics")
+def analytics(
+    form_id: int,
+    db: Session = Depends(get_db),
+):
+    return get_form_analytics(
+        db,
+        form_id,
+    )
+@router.get("/{form_id}/responses")
+def get_form_responses(
+    form_id: int,
+    limit: int = 20,
+    offset: int = 0,
+
+    search: str | None = None,
+
+    start_date: str | None = None,
+    end_date: str | None = None,
+
+    db: Session = Depends(get_db),
+):
+    return get_form_responses_service(
+        db=db,
+        form_id=form_id,
+        limit=limit,
+        offset=offset,
+        search=search,
+        start_date=start_date,
+        end_date=end_date,
+    )
+@router.get("/{form_id}/export")
+def export_form(
+    form_id: int,
+    format: str = "csv",
+    db: Session = Depends(get_db),
+):
+    return export_form_responses(
+        db=db,
+        form_id=form_id,
+        format=format,
     )

@@ -1,7 +1,7 @@
 .public-form-shell {
     min-height: 100vh;
     padding: 36px 20px 48px;
-    background: linear-gradient(135deg, #f6f7fb 0%, #eef2ff 100%);
+    background: linear-gradient(135deg, var(--surface-muted) 0%, var(--accent-soft) 100%);
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -11,8 +11,8 @@
     width: 100%;
     max-width: 950px;
     /* was 860px */
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 24px;
     box-shadow: 0 18px 45px rgba(15, 23, 42, 0.07);
 
@@ -25,7 +25,7 @@
 .public-form-header {
     margin-bottom: 28px;
     padding-bottom: 20px;
-    border-bottom: 1px solid #eef2ff;
+    border-bottom: 1px solid var(--border);
 }
 
 .public-form-header .eyebrow {
@@ -33,19 +33,19 @@
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #6366f1;
+    color: var(--accent);
     margin-bottom: 8px;
 }
 
 .public-form-header h1 {
     font-size: 30px;
     font-weight: 700;
-    color: #111827;
+    color: var(--text);
     margin-bottom: 10px;
 }
 
 .public-form-header p {
-    color: #6b7280;
+    color: var(--text-muted);
     line-height: 1.7;
     font-size: 15px;
 }
@@ -57,8 +57,8 @@
 }
 
 .public-field {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 18px;
 
     padding: 28px;
@@ -77,12 +77,12 @@
     display: block;
     font-size: 15px;
     font-weight: 700;
-    color: #374151;
+    color: var(--text-subtle);
     margin-bottom: 12px;
 }
 
 .public-field .required-mark {
-    color: #ef4444;
+    color: var(--danger);
     margin-left: 4px;
 }
 
@@ -90,12 +90,12 @@
 .public-form textarea,
 .public-form select {
     width: 100%;
-    border: 1px solid #dbe2ea;
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 13px 14px;
     font-size: 15px;
-    background: #fff;
-    color: #111827;
+    background: var(--surface);
+    color: var(--text);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
@@ -103,7 +103,7 @@
 .public-form textarea:focus,
 .public-form select:focus {
     outline: none;
-    border-color: #6366f1;
+    border-color: var(--accent);
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
 }
 
@@ -114,7 +114,7 @@
 
 .public-form select {
     appearance: none;
-    background-image: linear-gradient(45deg, transparent 50%, #6b7280 50%), linear-gradient(135deg, #6b7280 50%, transparent 50%);
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
     background-position: calc(100% - 20px) calc(1.2em), calc(100% - 14px) calc(1.2em);
     background-size: 6px 6px, 6px 6px;
     background-repeat: no-repeat;
@@ -123,8 +123,8 @@
 .public-form input:disabled,
 .public-form textarea:disabled,
 .public-form select:disabled {
-    background: #f8fafc;
-    color: #6b7280;
+    background: var(--surface-muted);
+    color: var(--text-muted);
     cursor: not-allowed;
 }
 
@@ -142,41 +142,41 @@
     align-items: center;
     gap: 10px;
     font-weight: 500;
-    color: #374151;
+    color: var(--text-subtle);
     margin-bottom: 0;
 }
 
 .public-form .checkbox-preview input,
 .public-form .radio-group input {
     width: auto;
-    accent-color: #6366f1;
+    accent-color: var(--accent);
 }
 
 .public-form .rating-preview {
     display: flex;
     gap: 6px;
     font-size: 28px;
-    color: #f59e0b;
+    color: var(--warning);
     padding-top: 4px;
 }
 
 .public-form .file-upload-card {
-    border: 1px dashed #c7d2fe;
+    border: 1px dashed var(--accent-ring);
     border-radius: 16px;
     padding: 18px;
-    background: linear-gradient(180deg, #fbfbff 0%, #f8fafc 100%);
+    background: var(--surface-muted);
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
 .public-form .file-upload-card strong {
-    color: #111827;
+    color: var(--text);
     font-size: 15px;
 }
 
 .public-form .file-upload-card span {
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 13px;
 }
 
@@ -193,8 +193,169 @@
 
 .public-form .upload-filename {
     font-size: 13px;
-    color: #4338ca;
+    color: var(--accent);
     font-weight: 600;
+}
+
+.public-form .upload-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 22px;
+    border: 1px dashed var(--accent-ring);
+    border-radius: 18px;
+    background: var(--surface-muted);
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.public-form .upload-box:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 22px rgba(99, 102, 241, 0.12);
+}
+
+.public-form .upload-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: var(--accent-ring);
+    font-size: 22px;
+}
+
+.public-form .upload-box h4 {
+    margin: 0 0 4px;
+    color: var(--text);
+    font-size: 16px;
+}
+
+.public-form .upload-box p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.public-form .upload-progress-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+}
+
+.public-form .upload-progress-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--surface);
+    overflow: hidden;
+}
+
+.public-form .upload-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--accent), var(--success));
+    transition: width 0.2s ease;
+}
+
+.public-form .upload-progress-text {
+    margin: 0;
+    color: var(--text-subtle);
+    font-weight: 600;
+}
+
+.public-form .file-card-modern {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--surface-muted);
+}
+
+.public-form .file-card-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.public-form .file-icon-badge {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--success-soft);
+    font-size: 20px;
+}
+
+.public-form .file-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.public-form .file-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.public-form .file-card-header h4 {
+    margin: 0;
+    color: var(--text);
+    font-size: 15px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.public-form .upload-success-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: var(--success-soft);
+    color: var(--success);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.public-form .file-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    color: var(--text-muted);
+}
+
+.public-form .delete-btn {
+    border: none;
+    background: var(--surface);
+    color: var(--danger);
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.public-form .delete-btn:hover {
+    background: var(--surface-muted);
+    transform: scale(1.04);
 }
 
 .public-form .submit-btn {
@@ -204,8 +365,8 @@
     border-radius: 14px;
     padding: 14px 18px;
     font-weight: 700;
-    color: white;
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: var(--button-text);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
     box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -227,30 +388,30 @@
 }
 
 .public-form .status-card.success {
-    background: #ecfdf3;
-    color: #166534;
-    border-color: #a7f3d0;
+    background: var(--success-soft);
+    color: var(--success);
+    border-color: var(--success-soft);
 }
 
 .public-form .status-card.error {
-    background: #fef2f2;
-    color: #b91c1c;
-    border-color: #fecaca;
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-color: var(--danger-soft);
 }
 
 .public-form .loading-state {
     text-align: center;
-    color: #6b7280;
+    color: var(--text-muted);
     padding: 24px 12px;
 }
 
 .public-form .empty-state {
     text-align: center;
-    color: #6b7280;
+    color: var(--text-muted);
     padding: 24px 12px;
-    border: 1px dashed #e5e7eb;
+    border: 1px dashed var(--border);
     border-radius: 18px;
-    background: #fafaff;
+    background: var(--surface-muted);
 }
 
 @keyframes publicFadeIn {
@@ -283,7 +444,7 @@
 }
 
 .field-error {
-    color: #dc2626;
+    color: var(--danger);
     font-size: 13px;
     font-weight: 500;
     margin-top: 6px;
@@ -301,6 +462,6 @@
 }
 
 .required-mark {
-    color: #dc2626;
+    color: var(--danger);
     margin-left: 4px;
 }

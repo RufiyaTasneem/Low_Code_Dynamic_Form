@@ -22,7 +22,8 @@ import {
 } from "@dnd-kit/sortable";
 import { evaluateRulesApi } from "../api/formApi";
 import SortableField from "../components/SortableField";
-
+import DashboardLayout from "../components/dashboard/DashboardLayout";
+import TopBar from "../components/dashboard/TopBar";
 const renderPreviewInput = (
     field,
     config,
@@ -577,25 +578,15 @@ export default function Builder() {
         await evaluateRules(updatedValues);
     };
     return (
-        <div className="dashboard-shell">
-            <aside className="sidebar">
-                <div className="brand">
-                    <div className="brand-mark">✦</div>
-                    <div>
-                        <h3>Form Studio</h3>
-                        <p>Dynamic Builder</p>
-                    </div>
-                </div>
+        <DashboardLayout>
 
-                <nav className="sidebar-nav">
-                    <div className="nav-item active">Builder</div>
-                    <div className="nav-item">Templates</div>
-                    <div className="nav-item">Responses</div>
-                    <div className="nav-item">Settings</div>
-                </nav>
-            </aside>
+            <TopBar
+                title="Form Builder"
+                subtitle="Create and manage dynamic forms"
+                showButton={false}
+            />
 
-            <main className="main-panel">
+            <main className="dashboard-content">
                 <section className="form-header">
                     <div className="header-top">
                         <div>
@@ -705,8 +696,15 @@ export default function Builder() {
                                             </span>
                                         </div>
                                         <div className="version-card-details">
-                                            <span>Published: {formatDate(version.published_at)}</span>
-                                            <span>Created: {formatDate(version.created_at)}</span>
+                                            <div>
+                                                <span className="detail-label">Published</span>
+                                                <strong>{formatDate(version.published_at)}</strong>
+                                            </div>
+
+                                            <div>
+                                                <span className="detail-label">Created</span>
+                                                <strong>{formatDate(version.created_at)}</strong>
+                                            </div>
                                         </div>
                                     </button>
                                 ))
@@ -919,6 +917,7 @@ export default function Builder() {
                     )}
                 </div>
             </main>
-        </div >
+
+        </DashboardLayout>
     );
 }

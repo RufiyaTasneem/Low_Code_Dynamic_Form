@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
+import AuthLayout from "../components/auth/AuthLayout";
+import "../components/auth/Auth.css";
 import { login } from "../services/authService";
 
 export default function Login() {
@@ -11,6 +14,7 @@ export default function Login() {
     });
 
     const [error, setError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
         setForm({
@@ -41,41 +45,59 @@ export default function Login() {
         }
     };
 
+    const handleSignInClick = (e) => {
+        e.preventDefault();
+        e.currentTarget.form?.requestSubmit();
+    };
+
     return (
         <div className="auth-page">
-            <div className="auth-card">
-                <h2>Welcome Back 👋</h2>
-
+            <AuthLayout
+                title="Welcome back"
+                subtitle="Sign in to continue to your account"
+                footerText="Don't have an account?"
+                footerLinkText="Sign Up"
+                footerHref="/register"
+            >
                 {error && <p className="error">{error}</p>}
 
-                <form onSubmit={handleSubmit}>
+                <form className="auth-form" onSubmit={handleSubmit}>
                     <input
                         type="email"
                         name="email"
                         placeholder="Email"
+                        value={form.email}
                         onChange={handleChange}
                     />
 
                     <input
+                        className="password-input"
                         type="password"
                         name="password"
                         placeholder="Password"
+                        value={form.password}
                         onChange={handleChange}
                     />
 
-                    <button type="submit">
-                        Login
+                    <div className="auth-options">
+                        <label>
+                            <input type="checkbox" />
+                            <span>Remember me</span>
+                        </label>
+                        <a href="#">Forgot password?</a>
+                    </div>
+
+                    <button className="auth-submit-btn" type="submit" onClick={handleSignInClick}>
+                        Sign In
                     </button>
                 </form>
 
-                <p>
-                    Don't have an account?
-                </p>
+                <div className="auth-divider">or</div>
 
-                <button onClick={() => navigate("/register")}>
-                    Register
+                <button className="auth-secondary-btn" type="button" onClick={() => navigate("/register")}>
+                    Create an account
                 </button>
-            </div>
+            </AuthLayout>
         </div>
     );
 }

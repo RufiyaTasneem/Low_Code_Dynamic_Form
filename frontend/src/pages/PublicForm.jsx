@@ -21,6 +21,51 @@ function renderField(
 ) {
     const config = field.config || {};
     const id = `field-${field.id}`;
+
+    const resolveFileName = (fileInfo) => {
+        if (!fileInfo) return "Uploaded file";
+
+        if (typeof fileInfo === "string") {
+            return fileInfo.split("/").pop() || "Uploaded file";
+        }
+
+        const fallbackName =
+            fileInfo.original_name ||
+            fileInfo.original_filename ||
+            fileInfo.filename ||
+            fileInfo.file_name ||
+            (typeof fileInfo.url === "string"
+                ? fileInfo.url.split("/").pop()
+                : "");
+
+        return fallbackName || "Uploaded file";
+    };
+
+    const resolveFileSize = (fileInfo) => {
+        if (!fileInfo) return null;
+
+        const sizeValue =
+            fileInfo.size ||
+            fileInfo.size_bytes ||
+            fileInfo.file_size ||
+            fileInfo.bytes;
+
+        if (typeof sizeValue === "number" && Number.isFinite(sizeValue)) {
+            if (sizeValue < 1024) return `${sizeValue} B`;
+            if (sizeValue < 1024 * 1024) return `${(sizeValue / 1024).toFixed(1)} KB`;
+            return `${(sizeValue / (1024 * 1024)).toFixed(1)} MB`;
+        }
+
+        if (typeof sizeValue === "string" && /^\d+$/.test(sizeValue)) {
+            const numericSize = Number(sizeValue);
+            if (numericSize < 1024) return `${numericSize} B`;
+            if (numericSize < 1024 * 1024) return `${(numericSize / 1024).toFixed(1)} KB`;
+            return `${(numericSize / (1024 * 1024)).toFixed(1)} MB`;
+        }
+
+        return null;
+    };
+
     switch (field.type) {
         case "text":
         case "password":
@@ -168,7 +213,71 @@ function renderField(
                     <span>{field.label}</span>
                 </div>
             );
-        case "file":
+        case "file": {
+            const uploadedFile = uploadedFiles?.[field.id];
+            const hasUploadedFile = Boolean(uploadedFile);
+            const currentProgress = Number(uploadProgress?.[field.id] || 0);
+            const progressPercent = Math.min(100, Math.max(0, currentProgress));
+            const fileName = resolveFileName(uploadedFile);
+            const fileSize = resolveFileSize(uploadedFile);
+
+            if (hasUploadedFile) {
+                console.log("Uploaded file payload:", uploadedFile);
+
+                return (
+                    <div className="file-input-wrapper">
+                        <div className="file-card-modern">
+                            <div className="file-card-main">
+                                <div className="file-icon-badge">📄</div>
+                                <div className="file-card-info">
+                                    <div className="file-card-header">
+                                        <h4>{fileName}</h4>
+                                        <span className="upload-success-badge">Upload Complete</span>
+                                    </div>
+                                    <div className="upload-progress-track">
+                                        <div
+                                            className="upload-progress-fill"
+                                            style={{ width: `${progressPercent}%` }}
+                                        />
+                                    </div>
+                                    <div className="file-card-meta">
+                                        <small>{fileSize || "File ready"}</small>
+                                        <small>{progressPercent}%</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                className="delete-btn"
+                                type="button"
+                                onClick={() => handleRemoveFile(field.id)}
+                            >
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (currentProgress > 0) {
+                return (
+                    <div className="file-input-wrapper">
+                        <div className="upload-progress-card">
+                            <div className="upload-progress-track">
+                                <div
+                                    className="upload-progress-fill"
+                                    style={{ width: `${progressPercent}%` }}
+                                />
+                            </div>
+                            <p className="upload-progress-text">
+                                {progressPercent === 100
+                                    ? "Upload Complete ✅"
+                                    : `Uploading... ${progressPercent}%`}
+                            </p>
+                        </div>
+                    </div>
+                );
+            }
+
             return (
                 <div className="file-input-wrapper">
                     <input
@@ -182,82 +291,53 @@ function renderField(
                         }}
                     />
 
-                    {!uploadedFiles?.[field.id] && (
-                        <label htmlFor={id} className="upload-box">
-                            <div className="upload-icon">📤</div>
-                            <div>
-                                <h4>Click to upload</h4>
-                                <p>PDF, DOCX, PNG, JPG (Max 5MB)</p>
-                            </div>
-                        </label>
-                    )}
-
-                    {uploadProgress[field.id] > 0 && (
-                        <div className="upload-status">
-                            <div
-                                className="progress-bar"
-                                style={{
-                                    width: `${uploadProgress[field.id]}%`,
-                                    height: "8px",
-                                    background: "#4f46e5",
-                                    borderRadius: "6px"
-                                }}
-                            />
-                            <p>
-                                {uploadProgress[field.id] === 100
-                                    ? "Upload Complete ✅"
-                                    : `Uploading... ${uploadProgress[field.id]}%`}
-                            </p>
+                    <label htmlFor={id} className="upload-box">
+                        <div className="upload-icon">📤</div>
+                        <div>
+                            <h4>Click to upload</h4>
+                            <p>PDF, DOCX, PNG, JPG (Max 5MB)</p>
                         </div>
-                    )}
+                    </label>
+                </div>
+            );
+        }
+        case "rating": {
+            const maxStars = Number(config.max_rating || 5);
+            const selectedRating = Number(formValues[field.id] || 0);
 
-                    {uploadedFiles?.[field.id] && (
-                        <div className="file-card">
-                            <div className="file-left">
-                                <div className="file-icon">📄</div>
-                                <div className="file-info">
-                                    <h4>{uploadedFiles[field.id].original_name}</h4>
-                                    <span className="success">Upload Complete ✅</span>
-                                    <div className="upload-progress">
-                                        <div
-                                            className="progress-bar"
-                                            style={{
-                                                width: `${uploadProgress[field.id]}%`
-                                            }}
-                                        />
-                                    </div>
-                                    <small>{uploadProgress[field.id]}%</small>
-                                </div>
-                            </div>
+            return (
+                <div className="rating-preview">
+                    {Array.from({ length: maxStars }, (_, i) => {
+                        const rating = i + 1;
+                        const isFilled = rating <= selectedRating;
+
+                        return (
                             <button
-                                className="delete-btn"
+                                key={rating}
                                 type="button"
-                                onClick={() => handleRemoveFile(field.id)}
+                                className="star-icon"
+                                aria-label={`Rate ${rating} out of ${maxStars}`}
+                                onClick={() => handleFieldChange(field.id, rating)}
+                                style={{
+                                    cursor: "pointer",
+                                    fontSize: "28px",
+                                    color: isFilled ? "var(--warning)" : "var(--border-strong)",
+                                    background: "transparent",
+                                    border: "none",
+                                    padding: 0,
+                                    lineHeight: 1,
+                                }}
                             >
-                                🗑️
+                                ★
                             </button>
-                        </div>
-                    )}
+                        );
+                    })}
                 </div>
             );
-        case "rating":
-            return (
-                <div className="rating-preview" aria-label="Rating preview">
-                    {Array.from({ length: 5 }, (_, i) => (
-                        <span key={i} className="star-icon">☆</span>
-                    ))}
-                </div>
-            );
+        }
+
         default:
-            return (
-                <input
-                    id={id}
-                    type="text"
-                    placeholder={field.label}
-                    value={formValues[field.id] || ""}
-                    onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                />
-            );
+            return null;
     }
 }
 
@@ -425,6 +505,25 @@ export default function PublicForm() {
                 ) {
                     alert(`${field.label} is required`);
                     return;
+                }
+
+                if (
+                    field.type === "rating" &&
+                    (config.required || fieldStates?.[field.id]?.required)
+                ) {
+                    const selectedRating = Number(formValues[field.id]);
+
+                    if (
+                        !Number.isFinite(selectedRating) ||
+                        selectedRating < 1 ||
+                        selectedRating > 5
+                    ) {
+                        setErrors((prev) => ({
+                            ...prev,
+                            [field.id]: ["Please select a rating."],
+                        }));
+                        return;
+                    }
                 }
 
                 // -----------------------
