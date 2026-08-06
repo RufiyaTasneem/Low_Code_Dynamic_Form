@@ -75,6 +75,29 @@
     box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0.08);
 }
 
+.sidebar-link {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-subtle);
+    text-decoration: none;
+    padding: 10px 12px;
+    border-radius: 12px;
+    transition: 0.2s ease;
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+}
+
+.sidebar-link:hover {
+    background: var(--surface-muted);
+    color: var(--text);
+    transform: translateX(2px);
+}
+
 .logout-btn {
     margin-top: auto;
     background: var(--surface-muted);

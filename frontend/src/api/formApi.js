@@ -21,7 +21,8 @@ export const getDraftApi = (formId) =>
 
 export const generateShareableLinkApi = (formId) =>
     API.post(`/forms/${formId}/generate-link`);
-
+export const duplicateFormApi = (formId) =>
+    API.post(`/forms/${formId}/duplicate`);
 export const getPublicFormApi = (token) =>
     API.get(`/public/forms/${token}`);
 
@@ -61,3 +62,19 @@ export const submitFormApi = (
 export const getMyFormsApi = () =>
     API.get("/forms/my");
 export default API;
+export const getRetentionPolicyApi = (formId) =>
+    API.get(`/forms/${formId}/retention`);
+
+export const updateRetentionPolicyApi = (formId, retentionDays) =>
+    API.patch(`/forms/${formId}/retention`, {
+        retention_days: retentionDays,
+    });
+export const bulkDeleteResponsesApi = (
+    formId,
+    submittedBefore
+) =>
+    API.delete(`/forms/${formId}/responses/bulk`, {
+        data: {
+            submitted_before: submittedBefore,
+        },
+    });

@@ -12,6 +12,7 @@ from app.routers import (
     public,
     conditional_rule,
     auth,
+    audit_logs,
 )
 
 app = FastAPI(
@@ -57,3 +58,4 @@ app.include_router(form.router)
 app.include_router(public.router)
 app.include_router(conditional_rule.router)
 app.include_router(upload_router)
+app.include_router(audit_logs.router)

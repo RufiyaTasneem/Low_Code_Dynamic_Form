@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import "../app.css";
 import API from "../services/api";
 import {
@@ -9,11 +10,12 @@ import {
     getDraftApi,
     generateShareableLinkApi,
     getConditionalRulesApi,
+    getRetentionPolicyApi,
+    updateRetentionPolicyApi,
 } from "../api/formApi";
 import ConditionalRuleBuilder from "../components/ConditionalRuleBuilder";
 import FieldPalette from "../components/FieldPalette";
 import ConfigPanel from "../components/ConfigPanel";
-
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import {
     SortableContext,
@@ -24,12 +26,22 @@ import { evaluateRulesApi } from "../api/formApi";
 import SortableField from "../components/SortableField";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import TopBar from "../components/dashboard/TopBar";
+
+const resolveFieldLabel = (field, language = "en") => {
+    if (typeof field?.label === "string") {
+        return field.label;
+    }
+
+    return field?.label?.[language] || field?.label?.en || "";
+};
+
 const renderPreviewInput = (
     field,
     config,
     formValues,
     fieldStates,
-    handleFieldChange
+    handleFieldChange,
+    selectedLanguage = "en"
 ) => {
     const inputId = `field-${field.id}`;
     const isRequired = Boolean(config?.required || fieldStates?.[field.id]?.required);
@@ -39,7 +51,7 @@ const renderPreviewInput = (
             <input
                 id={inputId}
                 type="text"
-                placeholder={config?.placeholder || field.label}
+                placeholder={config?.placeholder || resolveFieldLabel(field, selectedLanguage)}
                 value={formValues?.[field.id] || ""}
                 required={isRequired}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
@@ -52,7 +64,7 @@ const renderPreviewInput = (
             <input
                 id={inputId}
                 type="email"
-                placeholder={config?.placeholder || field.label}
+                placeholder={config?.placeholder || resolveFieldLabel(field, selectedLanguage)}
                 value={formValues[field.id] || ""}
                 required={isRequired}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
@@ -90,7 +102,7 @@ const renderPreviewInput = (
         return (
             <textarea
                 id={inputId}
-                placeholder={field.label}
+                placeholder={resolveFieldLabel(field, selectedLanguage)}
                 value={formValues[field.id] || ""}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
             />
@@ -131,7 +143,7 @@ const renderPreviewInput = (
                     checked={Boolean(formValues?.[field.id])}
                     onChange={(e) => handleFieldChange(field.id, e.target.checked)}
                 />
-                <span>{field.label}</span>
+                <span>{resolveFieldLabel(field, selectedLanguage)}</span>
             </div>
         );
     }
@@ -156,7 +168,7 @@ const renderPreviewInput = (
         <input
             id={inputId}
             type="text"
-            placeholder={field.label}
+            placeholder={resolveFieldLabel(field, selectedLanguage)}
             value={formValues?.[field.id] || ""}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
         />
@@ -164,6 +176,9 @@ const renderPreviewInput = (
 };
 
 export default function Builder() {
+    const [searchParams] = useSearchParams();
+    const [retentionDays, setRetentionDays] = useState(30);
+    const urlFormId = searchParams.get("id");
     const [selectedField, setSelectedField] = useState(null);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -179,6 +194,7 @@ export default function Builder() {
     const [isGeneratingShare, setIsGeneratingShare] = useState(false);
     const [fieldStates, setFieldStates] = useState({});
     const [formValues, setFormValues] = useState({});
+    const [selectedLanguage, setSelectedLanguage] = useState("en");
     const normalizeVersionStatus = (status) =>
         (status ?? "").toString().trim().toLowerCase();
 
@@ -208,16 +224,22 @@ export default function Builder() {
             return null;
         }
     };
-
+    useEffect(() => {
+        if (urlFormId) {
+            setFormId(Number(urlFormId));
+        }
+    }, [urlFormId]);
     useEffect(() => {
         if (!formId) {
             setVersions([]);
             setSelectedVersion(null);
             return;
         }
-
+        console.log("Loading form:", formId);
+        fetchForm(formId);
         fetchVersions(formId);
-        fetchRules();
+        fetchRules(formId);
+        fetchRetentionPolicy(formId);
     }, [formId]);
     useEffect(() => {
         const fetchFieldTypes = async () => {
@@ -232,15 +254,41 @@ export default function Builder() {
 
         fetchFieldTypes();
     }, []);
+    const fetchRetentionPolicy = async (id = formId) => {
+        if (!id) return;
 
+        try {
+            const res = await getRetentionPolicyApi(id);
+            setRetentionDays(res.data.retention_days);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+    const saveRetentionPolicy = async () => {
+        try {
+            await updateRetentionPolicyApi(formId, retentionDays);
+            alert("Retention policy updated.");
+        } catch (err) {
+            console.error(err);
+            alert("Failed to update retention policy.");
+        }
+    };
     const fetchForm = async (id) => {
         try {
             const response = await API.get(`/forms/${id}`);
+            console.log("BUILDER RESPONSE:", response.data);
             const formData = response.data || {};
 
             setTitle(formData.title || "");
             setDescription(formData.description || "");
-            setFields(Array.isArray(formData.fields) ? formData.fields : []);
+            setFields(
+                Array.isArray(formData.fields)
+                    ? [...formData.fields].sort(
+                        (a, b) => a.field_order - b.field_order
+                    )
+                    : []
+            );
+            console.log("FIELDS AFTER FETCH:", formData.fields);
         } catch (error) {
             console.error(error);
         }
@@ -592,21 +640,29 @@ export default function Builder() {
                         <div>
                             <p className="eyebrow">Low-Code Builder</p>
                             <h1>Create New Form</h1>
+                            <p className="header-copy">Design forms, manage versions, and publish with confidence.</p>
                         </div>
                         <div className="header-actions">
+                            <label className="form-group" style={{ margin: 0, minWidth: 170 }}>
+                                <span style={{ display: "block", fontSize: "0.8rem", marginBottom: 4 }}>Label Language</span>
+                                <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)}>
+                                    <option value="en">English (en)</option>
+                                    <option value="te">Telugu (te)</option>
+                                </select>
+                            </label>
                             <button className="ghost-btn" onClick={() => setPreviewMode(!previewMode)}>
                                 {previewMode ? "Back to Builder" : "Preview Form"}
                             </button>
-                            <button onClick={publishCurrentForm} disabled={!formId}>
+                            <button className="primary-btn" onClick={publishCurrentForm} disabled={!formId}>
                                 Publish
                             </button>
-                            <button onClick={archiveCurrentForm} disabled={!formId}>
+                            <button className="secondary-btn" onClick={archiveCurrentForm} disabled={!formId}>
                                 Archive
                             </button>
-                            <button onClick={generateShareLink} disabled={!formId || isGeneratingShare}>
-                                {isGeneratingShare ? "Generating..." : "Get Shareable Link"}
+                            <button className="ghost-btn" onClick={generateShareLink} disabled={!formId || isGeneratingShare}>
+                                {isGeneratingShare ? "Generating..." : "Share"}
                             </button>
-                            <button onClick={createForm} disabled={formId !== null}>
+                            <button className="primary-btn" onClick={createForm} disabled={formId !== null}>
                                 {formId ? "Form Created" : "Create Form"}
                             </button>
                         </div>
@@ -712,7 +768,33 @@ export default function Builder() {
                         </div>
                     </section>
                 )}
+                <section className="retention-card">
+                    <div className="retention-header">
+                        <div>
+                            <p className="eyebrow">Data Retention</p>
+                            <h2>Retention Policy</h2>
+                        </div>
+                    </div>
 
+                    <div className="retention-body">
+                        <label>Automatically archive responses after</label>
+
+                        <input
+                            type="number"
+                            min="0"
+                            value={retentionDays}
+                            onChange={(e) =>
+                                setRetentionDays(Number(e.target.value))
+                            }
+                        />
+
+                        <span>days</span>
+
+                        <button onClick={saveRetentionPolicy}>
+                            Save Policy
+                        </button>
+                    </div>
+                </section>
                 {shareUrl && (
                     <section className="share-link-card">
                         <div className="share-link-header">
@@ -756,6 +838,7 @@ export default function Builder() {
                                     onAddField={addField}
                                     onUpdateField={updateField}
                                     isLocked={isLocked}
+                                    selectedLanguage={selectedLanguage}
                                 />
                                 {formId && (
                                     <ConditionalRuleBuilder
@@ -763,6 +846,7 @@ export default function Builder() {
                                         fields={fields}
                                         rules={rules}
                                         fetchRules={fetchRules}
+                                        selectedLanguage={selectedLanguage}
                                     />
                                 )}
                             </div>
@@ -813,7 +897,7 @@ export default function Builder() {
                                                 return (
                                                     <div className="preview-field" key={field.id}>
                                                         <label htmlFor={`field-${field.id}`}>
-                                                            {field.label}
+                                                            {resolveFieldLabel(field, selectedLanguage)}
                                                             {config.required && (
                                                                 <span className="required-mark">*</span>
                                                             )}
@@ -824,7 +908,8 @@ export default function Builder() {
                                                             config,
                                                             formValues,
                                                             fieldStates,
-                                                            handleFieldChange
+                                                            handleFieldChange,
+                                                            selectedLanguage
                                                         )}
                                                     </div>
                                                 );
@@ -873,6 +958,7 @@ export default function Builder() {
                                                         });
                                                     }}
                                                     onDelete={deleteField}
+                                                    selectedLanguage={selectedLanguage}
                                                 />
                                             ))}
                                     </SortableContext>
@@ -901,13 +987,13 @@ export default function Builder() {
 
                                         return (
                                             <div className="rule-card" key={rule.id}>
-                                                <div className="rule-node">{trigger?.label}</div>
+                                                <div className="rule-node">{resolveFieldLabel(trigger, selectedLanguage)}</div>
                                                 <div className="rule-arrow">↓</div>
                                                 <div className="rule-condition">IF {rule.operator} {rule.value}</div>
                                                 <div className="rule-arrow">↓</div>
                                                 <div className="rule-action">{rule.action.toUpperCase()}</div>
                                                 <div className="rule-arrow">↓</div>
-                                                <div className="rule-node">{target?.label}</div>
+                                                <div className="rule-node">{resolveFieldLabel(target, selectedLanguage)}</div>
                                             </div>
                                         );
                                     })

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+const defaultLabelValue = { en: "", te: "" };
+
 function ConfigPanel({
     selectedField,
     editingField,
@@ -7,16 +9,40 @@ function ConfigPanel({
     onAddField,
     onUpdateField,
     isLocked,
+    selectedLanguage,
 }) {
-    const [label, setLabel] = useState("");
+    const [labelData, setLabelData] = useState(defaultLabelValue);
     const [config, setConfig] = useState({});
+
+    const normalizeLabelValue = (value) => {
+        if (!value) {
+            return { ...defaultLabelValue };
+        }
+
+        if (typeof value === "string") {
+            return { en: value, te: "" };
+        }
+
+        return {
+            en: value?.en || "",
+            te: value?.te || "",
+        };
+    };
+
+    const resolveLabel = (value, language = selectedLanguage) => {
+        if (typeof value === "string") {
+            return value;
+        }
+
+        return value?.[language] || value?.en || "";
+    };
 
     useEffect(() => {
         if (editingField) {
-            setLabel(editingField.label || "");
+            setLabelData(normalizeLabelValue(editingField.label));
             setConfig(editingField.config || {});
         } else {
-            setLabel(selectedField?.label || "");
+            setLabelData(normalizeLabelValue(selectedField?.label));
             setConfig({});
         }
     }, [editingField, selectedField]);
@@ -84,15 +110,17 @@ function ConfigPanel({
         const normalizedConfig = normalizeConfig(config);
 
         const fieldData = {
-            label,
-            type: selectedField.type,
-            field_order: 1,
+            label: {
+                en: labelData.en || "",
+                te: labelData.te || "",
+            },
+            type: fieldDefinition?.type,
             config: normalizedConfig,
         };
 
         onAddField(fieldData);
 
-        setLabel("");
+        setLabelData({ ...defaultLabelValue });
         setConfig({});
     };
 
@@ -101,12 +129,15 @@ function ConfigPanel({
 
         onUpdateField({
             id: editingField.id,
-            label,
+            label: {
+                en: labelData.en || "",
+                te: labelData.te || "",
+            },
             config,
         });
 
         setEditingField(null);
-        setLabel("");
+        setLabelData({ ...defaultLabelValue });
         setConfig({});
     };
 
@@ -175,17 +206,32 @@ function ConfigPanel({
             <h2>
                 {editingField
                     ? "Edit Field"
-                    : `${fieldDefinition.label || fieldDefinition.type || "Field"} Configuration`}
+                    : `${resolveLabel(fieldDefinition?.label, selectedLanguage) || fieldDefinition?.type || "Field"} Configuration`}
             </h2>
 
             <div className="form-group">
-                <label>Field Label</label>
+                <label>English Label</label>
                 <input
                     type="text"
-                    value={label}
+                    value={labelData.en}
                     disabled={isLocked}
-                    onChange={(e) => setLabel(e.target.value)}
-                    placeholder="Enter field label"
+                    onChange={(e) =>
+                        setLabelData((prev) => ({ ...prev, en: e.target.value }))
+                    }
+                    placeholder="Enter English label"
+                />
+            </div>
+
+            <div className="form-group">
+                <label>Telugu Label</label>
+                <input
+                    type="text"
+                    value={labelData.te}
+                    disabled={isLocked}
+                    onChange={(e) =>
+                        setLabelData((prev) => ({ ...prev, te: e.target.value }))
+                    }
+                    placeholder="Enter Telugu label"
                 />
             </div>
 

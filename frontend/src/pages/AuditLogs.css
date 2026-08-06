@@ -1,0 +1,36 @@
+.audit-container {
+    padding: 30px;
+}
+
+.audit-container h2 {
+    color: var(--text);
+    margin-bottom: 20px;
+}
+
+.audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.audit-table th,
+.audit-table td {
+    padding: 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.audit-table th {
+    background: var(--surface-muted);
+    color: var(--text);
+}
+
+.audit-table td {
+    color: var(--text-subtle);
+}
+
+.audit-table tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}

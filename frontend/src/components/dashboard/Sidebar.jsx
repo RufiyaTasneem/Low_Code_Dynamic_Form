@@ -42,7 +42,9 @@ export default function Sidebar() {
                 <NavLink to="/builder">
                     Builder
                 </NavLink>
-
+                <NavLink to="/audit-logs">
+                    Audit Logs
+                </NavLink>
             </nav>
 
             <button

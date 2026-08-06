@@ -4,11 +4,21 @@ import {
     deleteConditionalRuleApi,
 } from "../api/formApi";
 import "./ConditionalRuleBuilder.css";
+
+const resolveFieldLabel = (field, language = "en") => {
+    if (typeof field?.label === "string") {
+        return field.label;
+    }
+
+    return field?.label?.[language] || field?.label?.en || "";
+};
+
 function ConditionalRuleBuilder({
     formId,
     fields,
     rules,
     fetchRules,
+    selectedLanguage = "en",
 }) {
     const [triggerFieldId, setTriggerFieldId] = useState("");
     const [operator, setOperator] = useState("equals");
@@ -81,7 +91,7 @@ function ConditionalRuleBuilder({
                         key={field.id}
                         value={field.id}
                     >
-                        {field.label}
+                        {resolveFieldLabel(field, selectedLanguage)}
                     </option>
                 ))}
             </select>
@@ -139,7 +149,7 @@ function ConditionalRuleBuilder({
                         key={field.id}
                         value={field.id}
                     >
-                        {field.label}
+                        {resolveFieldLabel(field, selectedLanguage)}
                     </option>
                 ))}
             </select>
@@ -173,7 +183,7 @@ function ConditionalRuleBuilder({
                             key={rule.id}
                         >
                             <strong>
-                                IF {trigger?.label}
+                                IF {resolveFieldLabel(trigger, selectedLanguage)}
                             </strong>
 
                             <div>
@@ -182,7 +192,7 @@ function ConditionalRuleBuilder({
 
                             <div>
                                 THEN {rule.action.toUpperCase()}{" "}
-                                {target?.label}
+                                {resolveFieldLabel(target, selectedLanguage)}
                             </div>
 
                             <button

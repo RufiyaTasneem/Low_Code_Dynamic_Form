@@ -17,3 +17,9 @@ export const getResponsesApi = (
             end_date: endDate,
         },
     });
+export const bulkDeleteResponsesApi = (formId, responseIds) =>
+    API.delete(`/forms/${formId}/responses/bulk`, {
+        data: {
+            response_ids: responseIds,
+        },
+    });

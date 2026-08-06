@@ -10,6 +10,7 @@ import Forms from "./pages/Forms";
 import Analytics from "./pages/Analytics";
 import Responses from "./pages/Responses";
 import SubmissionSuccess from "./pages/SubmissionSuccess";
+import AuditLogs from "./pages/AuditLogs";
 
 import { isAuthenticated, getRole } from "./services/authService";
 
@@ -55,7 +56,7 @@ export default function App() {
           element={<Register />}
         />
 
-        {/* Admin Dashboard */}
+        {/* Dashboard */}
         <Route
           path="/dashboard"
           element={
@@ -105,6 +106,16 @@ export default function App() {
           }
         />
 
+        {/* Audit Logs */}
+        <Route
+          path="/audit-logs"
+          element={
+            <PrivateRoute>
+              <AuditLogs />
+            </PrivateRoute>
+          }
+        />
+
         {/* Public Form */}
         <Route
           path="/form/:token"
@@ -117,7 +128,7 @@ export default function App() {
           element={<SubmissionSuccess />}
         />
 
-        {/* 404 */}
+        {/* 404 - KEEP THIS LAST */}
         <Route
           path="*"
           element={<Navigate to="/" replace />}

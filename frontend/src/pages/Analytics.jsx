@@ -31,12 +31,21 @@ const COLORS = [
     "var(--surface)",
 ];
 
+const resolveFieldLabel = (field, language = "en") => {
+    if (typeof field?.label === "string") {
+        return field.label;
+    }
+
+    return field?.label?.[language] || field?.label?.en || "";
+};
+
 export default function Analytics() {
     const [searchParams] = useSearchParams();
     const formId = searchParams.get("id");
     const navigate = useNavigate();
 
     const [analytics, setAnalytics] = useState(null);
+    const [selectedLanguage, setSelectedLanguage] = useState("en");
 
     useEffect(() => {
         loadAnalytics();
@@ -82,6 +91,14 @@ export default function Analytics() {
                 />
 
                 <div className="analytics-actions">
+                    <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.9rem" }}>
+                        Language
+                        <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)}>
+                            <option value="en">English (en)</option>
+                            <option value="te">Telugu (te)</option>
+                        </select>
+                    </label>
+
                     <ExportDropdown formId={formId} />
 
                     <button
@@ -196,7 +213,7 @@ export default function Analytics() {
                         >
 
                             <div className="chart-heading">
-                                <h3>{field.label}</h3>
+                                <h3>{resolveFieldLabel(field, selectedLanguage)}</h3>
 
                                 <p>
                                     {field.type === "dropdown"

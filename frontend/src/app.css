@@ -332,39 +332,55 @@ select {
 
 .header-actions {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    align-items: center;
     justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: nowrap;
 }
 
-.form-header button,
-.ghost-btn,
-.preview-toggle,
-.add-btn,
-.edit-btn,
-.delete-btn {
+.header-actions button {
+    width: 120px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
     border: none;
-    border-radius: 10px;
-    padding: 8px 12px;
-    font-size: 0.9rem;
+    border-radius: 12px;
+
+    font-size: 15px;
     font-weight: 600;
+
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: .25s ease;
 }
 
-.form-header button,
-.preview-toggle,
-.add-btn {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-    color: var(--button-text);
-    box-shadow: 0 8px 18px var(--accent-shadow);
+.header-actions button:hover {
+    transform: translateY(-2px);
 }
 
-.form-header button:hover,
-.preview-toggle:hover,
-.add-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 22px var(--accent-shadow-strong);
+.header-actions .primary-btn,
+.header-actions .preview-toggle {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white;
+}
+
+.header-actions .ghost-btn {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.header-actions .danger-btn {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.header-actions .success-btn {
+    background: #dcfce7;
+    color: #15803d;
 }
 
 .ghost-btn {

@@ -1,20 +1,25 @@
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 
-
 # -----------------------------
 # Field Schemas
 # -----------------------------
 class FieldCreate(BaseModel):
-    label: str
+    label: Dict[str, str]
     type: str
     field_order: int
     config: Dict[str, Any]
+
+
 class FieldUpdate(BaseModel):
-    label: str
+    label: Dict[str, str]
     config: Dict[str, Any]
+
+
 class FieldReorder(BaseModel):
     field_ids: List[int]
+
+
 class FieldResponse(FieldCreate):
     id: int
     form_id: int
@@ -37,3 +42,10 @@ class FormResponse(FormCreate):
 
     class Config:
         from_attributes = True
+
+
+# -----------------------------
+# Retention Policy
+# -----------------------------
+class RetentionPolicyUpdate(BaseModel):
+    retention_days: int

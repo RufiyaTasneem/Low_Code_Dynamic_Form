@@ -4,6 +4,7 @@ import {
     getMyFormsApi,
     publishFormApi,
     generateShareableLinkApi,
+    duplicateFormApi,
 } from "../api/formApi";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import TopBar from "../components/dashboard/TopBar";
@@ -70,7 +71,26 @@ export default function Forms() {
             alert("Unable to generate share link");
         }
     }
+    async function handleDuplicate(formId) {
+        try {
+            const res = await duplicateFormApi(formId);
 
+            alert("Form duplicated successfully!");
+
+            // Get the new form id returned by the backend
+            const newFormId = res.data.id;
+
+            // Optional: refresh the forms page
+            await loadForms();
+
+            // Open the duplicated form
+            navigate(`/builder?id=${newFormId}`);
+
+        } catch (err) {
+            console.error(err);
+            alert("Failed to duplicate form");
+        }
+    }
     return (
         <DashboardLayout>
             <TopBar
@@ -147,7 +167,12 @@ export default function Forms() {
                                 >
                                     ✏️ Edit
                                 </button>
-
+                                <button
+                                    className="duplicate-btn"
+                                    onClick={() => handleDuplicate(form.id)}
+                                >
+                                    📄 Duplicate
+                                </button>
                                 <button
                                     className="analytics-btn"
                                     onClick={() =>

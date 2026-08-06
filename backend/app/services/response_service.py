@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
@@ -6,6 +8,7 @@ from app.models.form import Form
 from app.models.idempotency import IdempotencyKey
 from app.models.response import Response
 from app.models.response_value import ResponseValue
+from app.services.audit_service import log_action
 from app.services.rule_evaluator import evaluate_form_rules
 from app.services.validation_service import validate_field
 
@@ -26,6 +29,7 @@ def submit_form(
 
     submitted_values = submitted_values or {}
 
+    # Prevent duplicate submissions
     if idempotency_key:
         existing = (
             db.query(IdempotencyKey)
@@ -35,6 +39,7 @@ def submit_form(
 
         if existing:
             previous_response = existing.response
+
             return {
                 "success": True,
                 "message": "Duplicate submission prevented",
@@ -44,14 +49,27 @@ def submit_form(
             }
 
     fields = db.query(Field).filter(Field.form_id == form_id).all()
-    field_states = evaluate_form_rules(db, form_id, submitted_values)
+
+    field_states = evaluate_form_rules(
+        db,
+        form_id,
+        submitted_values,
+    )
 
     validation_errors = {}
 
     for field in fields:
-        value = submitted_values.get(str(field.id), submitted_values.get(field.id))
-        state = field_states.get(field.id, field_states.get(str(field.id)))
+        value = submitted_values.get(
+            str(field.id),
+            submitted_values.get(field.id),
+        )
 
+        state = field_states.get(
+            field.id,
+            field_states.get(str(field.id)),
+        )
+
+        # Hidden fields cannot be submitted
         if state and not state["visible"]:
             if value not in (None, "", {}):
                 validation_errors[str(field.id)] = [
@@ -59,6 +77,7 @@ def submit_form(
                 ]
             continue
 
+        # Required fields
         if state and state["required"]:
             if value in (None, "", {}):
                 validation_errors[str(field.id)] = [
@@ -83,22 +102,29 @@ def submit_form(
     db.refresh(response)
 
     for field in fields:
-        state = field_states.get(field.id, field_states.get(str(field.id)))
+        state = field_states.get(
+            field.id,
+            field_states.get(str(field.id)),
+        )
 
         if state and not state["visible"]:
             continue
 
-        value = submitted_values.get(str(field.id), submitted_values.get(field.id))
+        value = submitted_values.get(
+            str(field.id),
+            submitted_values.get(field.id),
+        )
 
         if value in (None, "", {}):
             continue
 
-        response_value = ResponseValue(
-            response_id=response.id,
-            field_id=field.id,
-            value=str(value),
+        db.add(
+            ResponseValue(
+                response_id=response.id,
+                field_id=field.id,
+                value=str(value),
+            )
         )
-        db.add(response_value)
 
     if idempotency_key:
         db.add(
@@ -109,6 +135,7 @@ def submit_form(
         )
 
     db.commit()
+
     return {
         "success": True,
         "message": "Response submitted successfully",
@@ -116,3 +143,55 @@ def submit_form(
         "submitted_at": response.submitted_at,
         "form_title": form.title,
     }
+
+
+# ======================================================
+# Bulk Delete Responses
+# ======================================================
+def bulk_delete_responses(
+    db: Session,
+    form_id: int,
+    user_id: int,
+    response_ids: list[int],
+):
+    responses = (
+        db.query(Response)
+        .filter(
+            Response.form_id == form_id,
+            Response.id.in_(response_ids),
+        )
+        .all()
+    )
+
+    if not responses:
+        return {
+            "message": "No responses found.",
+            "deleted": 0,
+        }
+
+    ids = [r.id for r in responses]
+
+    db.query(ResponseValue).filter(
+        ResponseValue.response_id.in_(ids)
+    ).delete(synchronize_session=False)
+
+    db.query(IdempotencyKey).filter(
+        IdempotencyKey.response_id.in_(ids)
+    ).delete(synchronize_session=False)
+
+    db.query(Response).filter(
+        Response.id.in_(ids)
+    ).delete(synchronize_session=False)
+
+    db.commit()
+
+    log_action(
+    db=db,
+    user_id=user_id,
+    form_id=form_id,
+    action="Bulk Delete Responses",
+    details=(
+        f"Deleted {len(ids)} responses. "
+        f"Response IDs: {ids}"
+    ),
+)

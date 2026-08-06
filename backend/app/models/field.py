@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from app.config.database import Base
@@ -11,13 +12,13 @@ class Field(Base):
 
     form_id = Column(Integer, ForeignKey("forms.id"), nullable=False)
 
-    label = Column(String(255), nullable=False)
+    label = Column(JSONB, nullable=False, default=dict)
 
     type = Column(String(50), nullable=False)
 
     field_order = Column(Integer, nullable=False)
 
-    config = Column(JSON, nullable=False)
+    config = Column(JSONB, nullable=False)
 
     form = relationship("Form", back_populates="fields")
     responses = relationship(

@@ -4,12 +4,21 @@ print(">>> form.py imported <<<")
 from app.config.database import SessionLocal
 from app.schemas.form import FieldReorder
 from app.services.form_service import reorder_fields
-from app.schemas.response import FormSubmission
-from app.services.response_service import submit_form
+from app.schemas.response import (
+    FormSubmission,
+    BulkDeleteRequest,
+)
+from app.services.response_service import (
+    submit_form,
+    bulk_delete_responses,
+)
 from app.routers.auth import get_current_user
 from app.services.analytics_service import get_form_analytics
 from fastapi.responses import StreamingResponse, JSONResponse
 from app.services.export_service import export_form_responses
+from app.schemas.form import RetentionPolicyUpdate
+from app.schemas.response import BulkDeleteRequest
+from app.services.form_service import update_retention_policy
 from app.models.user import User
 from app.services.response_browser_service import get_form_responses as get_form_responses_service
 from app.schemas.form import (
@@ -29,6 +38,7 @@ from app.services.form_service import (
     publish_form,
     archive_form,
     create_new_draft,
+    duplicate_form,
     get_form_versions,
     get_draft,
     get_version,
@@ -219,6 +229,17 @@ def get_draft_api(
         db,
         form_id,
     )
+@router.post("/{form_id}/duplicate")
+def duplicate_form_api(
+    form_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return duplicate_form(
+        db=db,
+        form_id=form_id,
+        owner_id=current_user.id,
+    )
 @router.post("/{form_id}/generate-link")
 def generate_shareable_link(
     form_id: int,
@@ -238,6 +259,19 @@ def submit_form_api(
         submitted_values=payload.submitted_values,
         idempotency_key=idempotency_key,
     )
+@router.delete("/{form_id}/responses/bulk")
+def bulk_delete_responses_api(
+    form_id: int,
+    payload: BulkDeleteRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return bulk_delete_responses(
+    db=db,
+    form_id=form_id,
+    user_id=current_user.id,
+    response_ids=payload.response_ids,
+)
 @router.get("/{form_id}/analytics")
 def analytics(
     form_id: int,
@@ -279,4 +313,15 @@ def export_form(
         db=db,
         form_id=form_id,
         format=format,
+    )
+@router.patch("/{form_id}/retention")
+def update_retention(
+    form_id: int,
+    data: RetentionPolicyUpdate,
+    db: Session = Depends(get_db),
+):
+    return update_retention_policy(
+        db,
+        form_id,
+        data.retention_days,
     )

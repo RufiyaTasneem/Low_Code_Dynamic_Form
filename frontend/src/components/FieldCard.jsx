@@ -1,4 +1,4 @@
-function FieldCard({ field, onSelect }) {
+function FieldCard({ field, onSelect, selectedLanguage = "en" }) {
     const getFieldIcon = (type) => {
         const icons = {
             text: "📝",
@@ -15,6 +15,14 @@ function FieldCard({ field, onSelect }) {
         return icons[type] || "✦";
     };
 
+    const resolveLabel = (value, language = selectedLanguage) => {
+        if (typeof value === "string") {
+            return value;
+        }
+
+        return value?.[language] || value?.en || "";
+    };
+
     return (
         <div
             className="field-card"
@@ -24,7 +32,7 @@ function FieldCard({ field, onSelect }) {
                 {getFieldIcon(field.type)}
             </div>
             <div>
-                <h3>{field.label}</h3>
+                <h3>{resolveLabel(field.label, selectedLanguage)}</h3>
                 <p>{field.type}</p>
             </div>
         </div>

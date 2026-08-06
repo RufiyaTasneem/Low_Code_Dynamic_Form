@@ -10,7 +10,6 @@ from app.models.response_value import ResponseValue
 from app.models.conditional_rule import ConditionalRule
 from app.services.field_type_service import get_field_types
 from datetime import datetime
-
 from app.models.form_version import FormVersion
 
 logger = logging.getLogger(__name__)
@@ -523,5 +522,64 @@ def get_version(db: Session, form_id: int, version_id: int):
             status_code=404,
             detail="Version not found",
         )
-
     return version.snapshot
+def duplicate_form(
+    db: Session,
+    form_id: int,
+    owner_id: int,
+):
+    original_form = (
+    db.query(Form)
+    .filter(Form.id == form_id)
+    .first()
+)
+    if not original_form:
+        raise Exception("Form not found")
+    new_form = Form(
+    title=f"{original_form.title} (Copy)",
+    description=original_form.description,
+    owner_id=owner_id,
+)
+    db.add(new_form)
+    db.commit()
+    db.refresh(new_form)
+    field_mapping = {}
+
+    for field in original_form.fields:
+
+        new_field = Field(
+            form_id=new_form.id,
+            label=field.label,
+            type=field.type,
+            field_order=field.field_order,
+            config=field.config,
+        )
+
+        db.add(new_field)
+        db.flush()
+
+        field_mapping[field.id] = new_field.id
+
+    db.commit()
+    db.refresh(new_form)
+    return new_form
+def update_retention_policy(
+    db: Session,
+    form_id: int,
+    retention_days: int,
+):
+    form = (
+        db.query(Form)
+        .filter(Form.id == form_id)
+        .first()
+    )
+
+    if not form:
+        raise Exception("Form not found")
+
+    form.retention_days = retention_days
+
+    db.commit()
+    db.refresh(form)
+
+    return form

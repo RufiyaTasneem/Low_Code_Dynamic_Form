@@ -3,15 +3,20 @@ import { useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import TopBar from "../components/dashboard/TopBar";
-import { getResponsesApi } from "../api/responseApi";
+import {
+    getResponsesApi,
+    bulkDeleteResponsesApi,
+} from "../api/responseApi";
 
 import "./Responses.css";
 
 export default function Responses() {
     const [responses, setResponses] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedResponse, setSelectedResponse] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [selectedResponse, setSelectedResponse] = useState(null);
+    const [selectedResponses, setSelectedResponses] = useState([]);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [total, setTotal] = useState(0);
     const [searchParams] = useSearchParams();
     const [search, setSearch] = useState("");
@@ -45,7 +50,7 @@ export default function Responses() {
         } finally {
             setLoading(false);
         }
-    }, [formId, offset]);
+    }, [formId, offset, search, startDate, endDate]);
     useEffect(() => {
         if (formId) {
             loadResponses();
@@ -57,6 +62,24 @@ export default function Responses() {
         startDate,
         endDate,
     ]);
+
+    const deleteSelectedResponses = async () => {
+        if (!formId || selectedResponses.length === 0) {
+            return;
+        }
+
+        try {
+            await bulkDeleteResponsesApi(formId, selectedResponses);
+            setShowDeleteModal(false);
+            setSelectedResponses([]);
+            await loadResponses();
+            alert("Responses deleted successfully.");
+        } catch (err) {
+            console.error("Failed to delete responses:", err);
+            alert("Failed to delete selected responses. Please try again.");
+        }
+    };
+
     return (
         <DashboardLayout>
             <TopBar
@@ -96,7 +119,15 @@ export default function Responses() {
             </div>
             <div className="responses-page">
                 <h2>Response Browser</h2>
-
+                <div className="bulk-actions">
+                    <button
+                        className="delete-selected-btn"
+                        disabled={selectedResponses.length === 0}
+                        onClick={() => setShowDeleteModal(true)}
+                    >
+                        🗑 Delete Selected ({selectedResponses.length})
+                    </button>
+                </div>
                 {loading ? (
                     <p>Loading responses...</p>
                 ) : responses.length === 0 ? (
@@ -106,6 +137,25 @@ export default function Responses() {
                         <table className="responses-table">
                             <thead>
                                 <tr>
+                                    <th>
+                                        <input
+                                            type="checkbox"
+                                            checked={
+                                                responses.length > 0 &&
+                                                selectedResponses.length === responses.length
+                                            }
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedResponses(
+                                                        responses.map((r) => r.id)
+                                                    );
+                                                } else {
+                                                    setSelectedResponses([]);
+                                                }
+                                            }}
+                                        />
+                                    </th>
+
                                     <th>Response ID</th>
                                     <th>Submitted At</th>
                                     <th>Actions</th>
@@ -115,6 +165,26 @@ export default function Responses() {
                             <tbody>
                                 {responses.map((response) => (
                                     <tr key={response.id}>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedResponses.includes(response.id)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedResponses([
+                                                            ...selectedResponses,
+                                                            response.id,
+                                                        ]);
+                                                    } else {
+                                                        setSelectedResponses(
+                                                            selectedResponses.filter(
+                                                                (id) => id !== response.id
+                                                            )
+                                                        );
+                                                    }
+                                                }}
+                                            />
+                                        </td>
                                         <td>{response.response_uid}</td>
 
                                         <td>
@@ -205,6 +275,37 @@ export default function Responses() {
                             >
                                 Close
                             </button>
+                        </div>
+                    </div>
+                )}
+                {showDeleteModal && (
+                    <div className="modal-overlay">
+                        <div className="response-modal">
+
+                            <h2>Delete Responses</h2>
+
+                            <p>
+                                Are you sure you want to permanently delete{" "}
+                                <strong>{selectedResponses.length}</strong> selected response(s)?
+                            </p>
+
+                            <p className="warning-text">
+                                ⚠ This action cannot be undone.
+                            </p>
+
+                            <div className="modal-actions">
+                                <button onClick={() => setShowDeleteModal(false)}>
+                                    Cancel
+                                </button>
+
+                                <button
+                                    className="danger-btn"
+                                    onClick={deleteSelectedResponses}
+                                >
+                                    Delete
+                                </button>
+                            </div>
+
                         </div>
                     </div>
                 )}

@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-function SortableField({ field, index, fieldTypes, onEdit, onDelete, isLocked, rules = [], }) {
+function SortableField({ field, index, fieldTypes, onEdit, onDelete, isLocked, rules = [], selectedLanguage = "en" }) {
     const {
         attributes,
         listeners,
@@ -40,6 +40,14 @@ function SortableField({ field, index, fieldTypes, onEdit, onDelete, isLocked, r
         return icons[type] || "✦";
     };
 
+    const resolveLabel = (value, language = selectedLanguage) => {
+        if (typeof value === "string") {
+            return value;
+        }
+
+        return value?.[language] || value?.en || "";
+    };
+
     return (
         <div
             ref={setNodeRef}
@@ -57,7 +65,7 @@ function SortableField({ field, index, fieldTypes, onEdit, onDelete, isLocked, r
 
                 <div className="canvas-field-content">
                     <h3>
-                        {field.label || `Field ${index + 1}`}
+                        {resolveLabel(field.label, selectedLanguage) || `Field ${index + 1}`}
                         {hasRule && (
                             <span className="rule-badge">
                                 ⚡ Rule

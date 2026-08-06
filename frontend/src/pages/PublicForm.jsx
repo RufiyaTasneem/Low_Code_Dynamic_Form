@@ -9,6 +9,14 @@ import {
     submitFormApi,
 } from "../api/formApi";
 import { z } from "zod";
+const resolveFieldLabel = (field, language = "en") => {
+    if (typeof field?.label === "string") {
+        return field.label;
+    }
+
+    return field?.label?.[language] || field?.label?.en || "";
+};
+
 function renderField(
     field,
     formValues,
@@ -17,7 +25,8 @@ function renderField(
     handleFileUpload,
     uploadProgress,
     uploadedFiles,
-    handleRemoveFile
+    handleRemoveFile,
+    selectedLanguage = "en"
 ) {
     const config = field.config || {};
     const id = `field-${field.id}`;
@@ -73,7 +82,7 @@ function renderField(
                 <input
                     id={id}
                     type={field.type === "password" ? "password" : "text"}
-                    placeholder={config.placeholder || field.label}
+                    placeholder={config.placeholder || resolveFieldLabel(field, selectedLanguage)}
                     value={formValues[field.id] || ""}
                     onChange={(e) =>
                         handleFieldChange(field.id, e.target.value)
@@ -85,7 +94,7 @@ function renderField(
                 <input
                     id={id}
                     type="email"
-                    placeholder={config.placeholder || field.label}
+                    placeholder={config.placeholder || resolveFieldLabel(field, selectedLanguage)}
                     value={formValues[field.id] || ""}
                     onChange={(e) =>
                         handleFieldChange(field.id, e.target.value)
@@ -132,7 +141,7 @@ function renderField(
             return (
                 <textarea
                     id={id}
-                    placeholder={field.label}
+                    placeholder={resolveFieldLabel(field, selectedLanguage)}
                     value={formValues[field.id] || ""}
 
                     onChange={(e) =>
@@ -210,7 +219,7 @@ function renderField(
                         checked={Boolean(formValues[field.id])}
                         onChange={(e) => handleFieldChange(field.id, e.target.checked)}
                     />
-                    <span>{field.label}</span>
+                    <span>{resolveFieldLabel(field, selectedLanguage)}</span>
                 </div>
             );
         case "file": {
@@ -354,6 +363,7 @@ export default function PublicForm() {
     const [uploadedFiles, setUploadedFiles] = useState({});
     const [idempotencyKey, setIdempotencyKey] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [selectedLanguage, setSelectedLanguage] = useState("en");
     const handleFieldChange = async (fieldId, value) => {
         const updatedValues = {
             ...formValues,
@@ -503,7 +513,7 @@ export default function PublicForm() {
                     (config.required || fieldStates?.[field.id]?.required) &&
                     !uploadedFiles[field.id]
                 ) {
-                    alert(`${field.label} is required`);
+                    alert(`${resolveFieldLabel(field, selectedLanguage)} is required`);
                     return;
                 }
 
@@ -537,7 +547,7 @@ export default function PublicForm() {
                     try {
                         z.string().email().parse(value);
                     } catch {
-                        alert(`${field.label} must be a valid email`);
+                        alert(`${resolveFieldLabel(field, selectedLanguage)} must be a valid email`);
                         return;
                     }
                 }
@@ -548,7 +558,7 @@ export default function PublicForm() {
                 if (field.type === "number" && value !== "") {
 
                     if (isNaN(Number(value))) {
-                        alert(`${field.label} must be a valid number`);
+                        alert(`${resolveFieldLabel(field, selectedLanguage)} must be a valid number`);
                         return;
                     }
 
@@ -556,7 +566,7 @@ export default function PublicForm() {
                         config.min !== undefined &&
                         Number(value) < Number(config.min)
                     ) {
-                        alert(`${field.label} must be at least ${config.min}`);
+                        alert(`${resolveFieldLabel(field, selectedLanguage)} must be at least ${config.min}`);
                         return;
                     }
 
@@ -564,7 +574,7 @@ export default function PublicForm() {
                         config.max !== undefined &&
                         Number(value) > Number(config.max)
                     ) {
-                        alert(`${field.label} must be at most ${config.max}`);
+                        alert(`${resolveFieldLabel(field, selectedLanguage)} must be at most ${config.max}`);
                         return;
                     }
                 }
@@ -578,7 +588,7 @@ export default function PublicForm() {
                         config.min_length &&
                         value.length < config.min_length
                     ) {
-                        alert(`${field.label} is too short`);
+                        alert(`${resolveFieldLabel(field, selectedLanguage)} is too short`);
                         return;
                     }
 
@@ -586,7 +596,7 @@ export default function PublicForm() {
                         config.max_length &&
                         value.length > config.max_length
                     ) {
-                        alert(`${field.label} is too long`);
+                        alert(`${resolveFieldLabel(field, selectedLanguage)} is too long`);
                         return;
                     }
                 }
@@ -724,9 +734,20 @@ export default function PublicForm() {
         <div className="public-form-shell">
             <main className="public-form">
                 <header className="public-form-header">
-                    <p className="eyebrow">Public Form</p>
-                    <h1>{form.title || "Untitled Form"}</h1>
-                    {form.description && <p>{form.description}</p>}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                        <div>
+                            <p className="eyebrow">Public Form</p>
+                            <h1>{form.title || "Untitled Form"}</h1>
+                            {form.description && <p>{form.description}</p>}
+                        </div>
+                        <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.9rem" }}>
+                            Language
+                            <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)}>
+                                <option value="en">English (en)</option>
+                                <option value="te">Telugu (te)</option>
+                            </select>
+                        </label>
+                    </div>
                 </header>
 
                 <form
@@ -751,7 +772,7 @@ export default function PublicForm() {
                                 .map((field) => (
                                     <div className="public-field" key={field.id}>
                                         <label>
-                                            {field.label}
+                                            {resolveFieldLabel(field, selectedLanguage)}
                                             {(fieldStates?.[field.id]?.required ||
                                                 field.config?.required) && (
                                                     <span className="required-mark">*</span>
@@ -766,7 +787,8 @@ export default function PublicForm() {
                                             handleFileUpload,
                                             uploadProgress,
                                             uploadedFiles,
-                                            handleRemoveFile
+                                            handleRemoveFile,
+                                            selectedLanguage
                                         )}
                                         {errors?.[field.id] && (
                                             <div className="field-error">
