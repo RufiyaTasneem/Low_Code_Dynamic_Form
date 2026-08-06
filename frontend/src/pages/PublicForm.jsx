@@ -9,12 +9,118 @@ import {
     submitFormApi,
 } from "../api/formApi";
 import { z } from "zod";
+const resolveText = (value, language = "en") => {
+    if (!value) return "";
+    if (typeof value === "string") {
+        try {
+            const parsed = JSON.parse(value);
+            if (typeof parsed === "object" && parsed !== null) {
+                return parsed[language] || parsed.en || "";
+            }
+        } catch (e) {
+            // Plain string
+        }
+        return value;
+    }
+    if (typeof value === "object" && value !== null) {
+        return value[language] || value.en || "";
+    }
+    return String(value);
+};
+
 const resolveFieldLabel = (field, language = "en") => {
     if (typeof field?.label === "string") {
         return field.label;
     }
 
     return field?.label?.[language] || field?.label?.en || "";
+};
+
+const resolvePlaceholder = (placeholder, language = "en") => {
+    if (typeof placeholder === "string") {
+        return placeholder;
+    }
+    return placeholder?.[language] || placeholder?.en || "";
+};
+
+const normalizeOptions = (options) => {
+    if (!options) return [];
+    let list = options;
+    if (typeof list === "string") {
+        list = list.split(/[,\n]+/).map((s) => s.trim()).filter(Boolean);
+    }
+    if (!Array.isArray(list)) return [];
+
+    return list.map((opt) => {
+        if (!opt) return { value: "", label: { en: "", te: "" } };
+
+        if (typeof opt === "string") {
+            try {
+                const parsed = JSON.parse(opt);
+                if (typeof parsed === "object" && parsed !== null && (parsed.value || parsed.label || parsed.en)) {
+                    const val = parsed.value || parsed.label?.en || parsed.en || "";
+                    const enLabel = (parsed.label && typeof parsed.label === "object")
+                        ? (parsed.label.en || val)
+                        : (typeof parsed.label === "string" ? parsed.label : (parsed.en || val));
+                    const teLabel = (parsed.label && typeof parsed.label === "object")
+                        ? (parsed.label.te || enLabel)
+                        : (parsed.te || enLabel);
+                    return {
+                        value: val,
+                        label: { en: enLabel, te: teLabel }
+                    };
+                }
+            } catch (e) {
+                // Plain string
+            }
+            return {
+                value: opt,
+                label: { en: opt, te: opt }
+            };
+        }
+
+        if (typeof opt === "object" && opt !== null) {
+            const val = opt.value || opt.label?.en || opt.en || opt.te || "";
+            const enLabel = (opt.label && typeof opt.label === "object")
+                ? (opt.label.en || val)
+                : (typeof opt.label === "string" ? opt.label : (opt.en || val));
+            const teLabel = (opt.label && typeof opt.label === "object")
+                ? (opt.label.te || enLabel)
+                : (opt.te || enLabel);
+
+            return {
+                value: val,
+                label: { en: enLabel, te: teLabel }
+            };
+        }
+
+        return {
+            value: String(opt),
+            label: { en: String(opt), te: String(opt) }
+        };
+    });
+};
+
+const resolveOptionDisplayLabel = (option, language = "en") => {
+    if (!option) return "";
+    if (typeof option === "string") return option;
+    if (typeof option === "object" && option !== null) {
+        if (option.label && typeof option.label === "object") {
+            return option.label[language] || option.label.en || option.label.te || option.value || "";
+        }
+        if (typeof option.label === "string") return option.label;
+        return option[language] || option.en || option.te || option.value || "";
+    }
+    return String(option);
+};
+
+const resolveOptionValue = (option) => {
+    if (!option) return "";
+    if (typeof option === "string") return option;
+    if (typeof option === "object" && option !== null) {
+        return option.value || option.label?.en || option.en || JSON.stringify(option);
+    }
+    return String(option);
 };
 
 function renderField(
@@ -30,6 +136,7 @@ function renderField(
 ) {
     const config = field.config || {};
     const id = `field-${field.id}`;
+    const resolvedPlaceholder = resolvePlaceholder(config.placeholder, selectedLanguage) || resolveFieldLabel(field, selectedLanguage);
 
     const resolveFileName = (fileInfo) => {
         if (!fileInfo) return "Uploaded file";
@@ -82,7 +189,7 @@ function renderField(
                 <input
                     id={id}
                     type={field.type === "password" ? "password" : "text"}
-                    placeholder={config.placeholder || resolveFieldLabel(field, selectedLanguage)}
+                    placeholder={resolvedPlaceholder}
                     value={formValues[field.id] || ""}
                     onChange={(e) =>
                         handleFieldChange(field.id, e.target.value)
@@ -94,7 +201,7 @@ function renderField(
                 <input
                     id={id}
                     type="email"
-                    placeholder={config.placeholder || resolveFieldLabel(field, selectedLanguage)}
+                    placeholder={resolvedPlaceholder}
                     value={formValues[field.id] || ""}
                     onChange={(e) =>
                         handleFieldChange(field.id, e.target.value)
@@ -141,7 +248,7 @@ function renderField(
             return (
                 <textarea
                     id={id}
-                    placeholder={resolveFieldLabel(field, selectedLanguage)}
+                    placeholder={resolvedPlaceholder}
                     value={formValues[field.id] || ""}
 
                     onChange={(e) =>
@@ -149,13 +256,9 @@ function renderField(
                     }
                 />
             );
+
         case "dropdown": {
-            const options = Array.isArray(config.options)
-                ? config.options
-                : String(config.options || "")
-                    .split(",")
-                    .map((s) => s.trim())
-                    .filter(Boolean);
+            const rawOptions = normalizeOptions(config.options);
 
             return (
                 <select
@@ -171,46 +274,78 @@ function renderField(
                 >
                     <option value="">Select...</option>
 
-                    {options.map((opt) => (
-                        <option key={opt} value={opt}>
-                            {opt}
-                        </option>
-                    ))}
+                    {rawOptions.map((opt, idx) => {
+                        const optValue = resolveOptionValue(opt);
+                        const optLabel = resolveOptionDisplayLabel(opt, selectedLanguage);
+                        return (
+                            <option key={idx} value={optValue}>
+                                {optLabel}
+                            </option>
+                        );
+                    })}
                 </select>
             );
         }
         case "radio": {
-            const options = Array.isArray(config.options)
-                ? config.options
-                : String(config.options || "")
-                    .split(",")
-                    .map((s) => s.trim())
-                    .filter(Boolean);
+            const rawOptions = normalizeOptions(config.options);
 
             return (
                 <div className="radio-group">
-                    {options.map((opt) => (
-                        <label key={opt}>
-                            <input
-                                type="radio"
-                                name={id}
-                                value={opt}
-                                checked={formValues[field.id] === opt}
-                                required={
-                                    fieldStates?.[field.id]?.required ||
-                                    Boolean(config.required)
-                                }
-                                onChange={(e) =>
-                                    handleFieldChange(field.id, e.target.value)
-                                }
-                            />
-                            {opt}
-                        </label>
-                    ))}
+                    {rawOptions.map((opt, idx) => {
+                        const optValue = resolveOptionValue(opt);
+                        const optLabel = resolveOptionDisplayLabel(opt, selectedLanguage);
+                        return (
+                            <label key={idx}>
+                                <input
+                                    type="radio"
+                                    name={id}
+                                    value={optValue}
+                                    checked={formValues[field.id] === optValue}
+                                    required={
+                                        fieldStates?.[field.id]?.required ||
+                                        Boolean(config.required)
+                                    }
+                                    onChange={(e) =>
+                                        handleFieldChange(field.id, e.target.value)
+                                    }
+                                />
+                                {optLabel}
+                            </label>
+                        );
+                    })}
                 </div>
             );
         }
-        case "checkbox":
+        case "checkbox": {
+            const rawOptions = normalizeOptions(config.options);
+
+            if (rawOptions.length > 0) {
+                return (
+                    <div className="checkbox-group" style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                        {rawOptions.map((opt, idx) => {
+                            const optValue = resolveOptionValue(opt);
+                            const optLabel = resolveOptionDisplayLabel(opt, selectedLanguage);
+                            return (
+                                <label key={idx} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <input
+                                        type="checkbox"
+                                        name={id}
+                                        value={optValue}
+                                        checked={
+                                            Array.isArray(formValues[field.id])
+                                                ? formValues[field.id].includes(optValue)
+                                                : Boolean(formValues[field.id])
+                                        }
+                                        onChange={(e) => handleFieldChange(field.id, e.target.checked)}
+                                    />
+                                    <span>{optLabel}</span>
+                                </label>
+                            );
+                        })}
+                    </div>
+                );
+            }
+
             return (
                 <div className="checkbox-preview">
                     <input
@@ -222,6 +357,7 @@ function renderField(
                     <span>{resolveFieldLabel(field, selectedLanguage)}</span>
                 </div>
             );
+        }
         case "file": {
             const uploadedFile = uploadedFiles?.[field.id];
             const hasUploadedFile = Boolean(uploadedFile);
@@ -737,8 +873,8 @@ export default function PublicForm() {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
                         <div>
                             <p className="eyebrow">Public Form</p>
-                            <h1>{form.title || "Untitled Form"}</h1>
-                            {form.description && <p>{form.description}</p>}
+                            <h1>{resolveText(form.title, selectedLanguage) || "Untitled Form"}</h1>
+                            {form.description && <p>{resolveText(form.description, selectedLanguage)}</p>}
                         </div>
                         <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.9rem" }}>
                             Language

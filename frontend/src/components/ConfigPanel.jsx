@@ -2,6 +2,64 @@ import { useState, useEffect } from "react";
 
 const defaultLabelValue = { en: "", te: "" };
 
+const normalizeOptions = (options) => {
+    if (!options) return [];
+    let list = options;
+    if (typeof list === "string") {
+        list = list.split(/[,\n]+/).map((s) => s.trim()).filter(Boolean);
+    }
+    if (!Array.isArray(list)) return [];
+
+    return list.map((opt) => {
+        if (!opt) return { value: "", label: { en: "", te: "" } };
+
+        if (typeof opt === "string") {
+            try {
+                const parsed = JSON.parse(opt);
+                if (typeof parsed === "object" && parsed !== null && (parsed.value || parsed.label || parsed.en)) {
+                    const val = parsed.value || parsed.label?.en || parsed.en || "";
+                    const enLabel = (parsed.label && typeof parsed.label === "object")
+                        ? (parsed.label.en || val)
+                        : (typeof parsed.label === "string" ? parsed.label : (parsed.en || val));
+                    const teLabel = (parsed.label && typeof parsed.label === "object")
+                        ? (parsed.label.te || enLabel)
+                        : (parsed.te || enLabel);
+                    return {
+                        value: val,
+                        label: { en: enLabel, te: teLabel }
+                    };
+                }
+            } catch (e) {
+                // Plain string
+            }
+            return {
+                value: opt,
+                label: { en: opt, te: opt }
+            };
+        }
+
+        if (typeof opt === "object" && opt !== null) {
+            const val = opt.value || opt.label?.en || opt.en || opt.te || "";
+            const enLabel = (opt.label && typeof opt.label === "object")
+                ? (opt.label.en || val)
+                : (typeof opt.label === "string" ? opt.label : (opt.en || val));
+            const teLabel = (opt.label && typeof opt.label === "object")
+                ? (opt.label.te || enLabel)
+                : (opt.te || enLabel);
+
+            return {
+                value: val,
+                label: { en: enLabel, te: teLabel }
+            };
+        }
+
+        return {
+            value: String(opt),
+            label: { en: String(opt), te: String(opt) }
+        };
+    });
+};
+
 function ConfigPanel({
     selectedField,
     editingField,
@@ -82,7 +140,11 @@ function ConfigPanel({
         (fieldDefinition.config || [])
             .filter((item) => item.type === "list")
             .forEach((item) => {
-                normalized[item.name] = parseListValues(normalized[item.name]);
+                if (item.name === "options") {
+                    normalized[item.name] = normalizeOptions(normalized[item.name]);
+                } else {
+                    normalized[item.name] = parseListValues(normalized[item.name]);
+                }
             });
 
         return normalized;
@@ -187,6 +249,111 @@ function ConfigPanel({
                     disabled={isLocked}
                     onChange={(e) => handleChange(item.name, e.target.value, item.type)}
                 />
+            );
+        }
+
+        if (item.name === "options") {
+            const normOptions = normalizeOptions(config[item.name]);
+
+            const enText = normOptions.map((opt) => opt.label.en || opt.value).join("\n");
+            const teText = normOptions.map((opt) => opt.label.te || opt.label.en || opt.value).join("\n");
+
+            const handleMultilingualOptionsChange = (newEnText, newTeText) => {
+                const enLines = String(newEnText || "")
+                    .split("\n")
+                    .map((s) => s.trim());
+                const teLines = String(newTeText || "")
+                    .split("\n")
+                    .map((s) => s.trim());
+
+                const maxLen = Math.max(enLines.length, teLines.length);
+                const nextOptions = [];
+
+                for (let i = 0; i < maxLen; i++) {
+                    const enVal = enLines[i] || "";
+                    const teVal = teLines[i] || "";
+                    if (enVal || teVal) {
+                        const rawVal = enVal || teVal;
+                        nextOptions.push({
+                            value: rawVal,
+                            label: {
+                                en: enVal || teVal,
+                                te: teVal || enVal,
+                            },
+                        });
+                    }
+                }
+
+                handleChange(item.name, nextOptions, item.type);
+            };
+
+            return (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                        <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
+                            English Options (one option per line)
+                        </label>
+                        <textarea
+                            rows={4}
+                            placeholder={"yes\nno\nmaybe"}
+                            value={enText}
+                            disabled={isLocked}
+                            onChange={(e) => handleMultilingualOptionsChange(e.target.value, teText)}
+                        />
+                    </div>
+
+                    <div className="form-group" style={{ margin: 0 }}>
+                        <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
+                            Telugu Options (one option per line)
+                        </label>
+                        <textarea
+                            rows={4}
+                            placeholder={"అవును\nలేదు\nబహుశా"}
+                            value={teText}
+                            disabled={isLocked}
+                            onChange={(e) => handleMultilingualOptionsChange(enText, e.target.value)}
+                        />
+                    </div>
+                </div>
+            );
+        }
+
+        if (item.name === "placeholder") {
+            const raw = config[item.name];
+            const placeholderObj =
+                typeof raw === "object" && raw !== null
+                    ? raw
+                    : { en: typeof raw === "string" ? raw : "", te: "" };
+
+            return (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <input
+                        type="text"
+                        placeholder="English Placeholder"
+                        value={placeholderObj.en || ""}
+                        disabled={isLocked}
+                        onChange={(e) =>
+                            handleChange(
+                                item.name,
+                                { ...placeholderObj, en: e.target.value },
+                                item.type
+                            )
+                        }
+                    />
+                    <input
+                        type="text"
+                        placeholder="Telugu Placeholder"
+                        value={placeholderObj.te || ""}
+                        disabled={isLocked}
+                        onChange={(e) =>
+                            handleChange(
+                                item.name,
+                                { ...placeholderObj, te: e.target.value },
+                                item.type
+                            )
+                        }
+                    />
+                </div>
             );
         }
 

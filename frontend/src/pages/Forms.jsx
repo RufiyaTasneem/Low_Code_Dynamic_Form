@@ -10,6 +10,25 @@ import DashboardLayout from "../components/dashboard/DashboardLayout";
 import TopBar from "../components/dashboard/TopBar";
 import "./Forms.css";
 
+const resolveText = (value, language = "en") => {
+    if (!value) return "";
+    if (typeof value === "string") {
+        try {
+            const parsed = JSON.parse(value);
+            if (typeof parsed === "object" && parsed !== null) {
+                return parsed[language] || parsed.en || "";
+            }
+        } catch (e) {
+            // Plain string
+        }
+        return value;
+    }
+    if (typeof value === "object" && value !== null) {
+        return value[language] || value.en || "";
+    }
+    return String(value);
+};
+
 export default function Forms() {
     const navigate = useNavigate();
 
@@ -124,7 +143,7 @@ export default function Forms() {
                             key={form.id}
                         >
                             <div className="form-top">
-                                <h2>{form.title}</h2>
+                                <h2>{resolveText(form.title)}</h2>
 
                                 <span
                                     className={
@@ -138,7 +157,7 @@ export default function Forms() {
                             </div>
 
                             <p className="description">
-                                {form.description || "No description"}
+                                {resolveText(form.description) || "No description"}
                             </p>
 
                             <div className="form-info">

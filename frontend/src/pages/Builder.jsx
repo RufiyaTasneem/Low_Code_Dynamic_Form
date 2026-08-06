@@ -35,6 +35,13 @@ const resolveFieldLabel = (field, language = "en") => {
     return field?.label?.[language] || field?.label?.en || "";
 };
 
+const resolvePlaceholder = (placeholder, language = "en") => {
+    if (typeof placeholder === "string") {
+        return placeholder;
+    }
+    return placeholder?.[language] || placeholder?.en || "";
+};
+
 const renderPreviewInput = (
     field,
     config,
@@ -45,13 +52,14 @@ const renderPreviewInput = (
 ) => {
     const inputId = `field-${field.id}`;
     const isRequired = Boolean(config?.required || fieldStates?.[field.id]?.required);
+    const resolvedPlaceholder = resolvePlaceholder(config?.placeholder, selectedLanguage) || resolveFieldLabel(field, selectedLanguage);
 
     if (field.type === "text") {
         return (
             <input
                 id={inputId}
                 type="text"
-                placeholder={config?.placeholder || resolveFieldLabel(field, selectedLanguage)}
+                placeholder={resolvedPlaceholder}
                 value={formValues?.[field.id] || ""}
                 required={isRequired}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
@@ -64,7 +72,7 @@ const renderPreviewInput = (
             <input
                 id={inputId}
                 type="email"
-                placeholder={config?.placeholder || resolveFieldLabel(field, selectedLanguage)}
+                placeholder={resolvedPlaceholder}
                 value={formValues[field.id] || ""}
                 required={isRequired}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
@@ -102,20 +110,95 @@ const renderPreviewInput = (
         return (
             <textarea
                 id={inputId}
-                placeholder={resolveFieldLabel(field, selectedLanguage)}
+                placeholder={resolvedPlaceholder}
                 value={formValues[field.id] || ""}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
             />
         );
     }
 
+const normalizeOptions = (options) => {
+    if (!options) return [];
+    let list = options;
+    if (typeof list === "string") {
+        list = list.split(/[,\n]+/).map((s) => s.trim()).filter(Boolean);
+    }
+    if (!Array.isArray(list)) return [];
+
+    return list.map((opt) => {
+        if (!opt) return { value: "", label: { en: "", te: "" } };
+
+        if (typeof opt === "string") {
+            try {
+                const parsed = JSON.parse(opt);
+                if (typeof parsed === "object" && parsed !== null && (parsed.value || parsed.label || parsed.en)) {
+                    const val = parsed.value || parsed.label?.en || parsed.en || "";
+                    const enLabel = (parsed.label && typeof parsed.label === "object")
+                        ? (parsed.label.en || val)
+                        : (typeof parsed.label === "string" ? parsed.label : (parsed.en || val));
+                    const teLabel = (parsed.label && typeof parsed.label === "object")
+                        ? (parsed.label.te || enLabel)
+                        : (parsed.te || enLabel);
+                    return {
+                        value: val,
+                        label: { en: enLabel, te: teLabel }
+                    };
+                }
+            } catch (e) {
+                // Plain string
+            }
+            return {
+                value: opt,
+                label: { en: opt, te: opt }
+            };
+        }
+
+        if (typeof opt === "object" && opt !== null) {
+            const val = opt.value || opt.label?.en || opt.en || opt.te || "";
+            const enLabel = (opt.label && typeof opt.label === "object")
+                ? (opt.label.en || val)
+                : (typeof opt.label === "string" ? opt.label : (opt.en || val));
+            const teLabel = (opt.label && typeof opt.label === "object")
+                ? (opt.label.te || enLabel)
+                : (opt.te || enLabel);
+
+            return {
+                value: val,
+                label: { en: enLabel, te: teLabel }
+            };
+        }
+
+        return {
+            value: String(opt),
+            label: { en: String(opt), te: String(opt) }
+        };
+    });
+};
+
+const resolveOptionDisplayLabel = (option, language = "en") => {
+    if (!option) return "";
+    if (typeof option === "string") return option;
+    if (typeof option === "object" && option !== null) {
+        if (option.label && typeof option.label === "object") {
+            return option.label[language] || option.label.en || option.label.te || option.value || "";
+        }
+        if (typeof option.label === "string") return option.label;
+        return option[language] || option.en || option.te || option.value || "";
+    }
+    return String(option);
+};
+
+const resolveOptionValue = (option) => {
+    if (!option) return "";
+    if (typeof option === "string") return option;
+    if (typeof option === "object" && option !== null) {
+        return option.value || option.label?.en || option.en || JSON.stringify(option);
+    }
+    return String(option);
+};
+
     if (field.type === "dropdown") {
-        const options = Array.isArray(config?.options)
-            ? config.options
-            : String(config?.options || "")
-                .split(",")
-                .map((item) => item.trim())
-                .filter(Boolean);
+        const rawOptions = normalizeOptions(config?.options);
 
         return (
             <select
@@ -125,16 +208,74 @@ const renderPreviewInput = (
             >
                 <option value="">Select...</option>
 
-                {options.map((option) => (
-                    <option key={option} value={option}>
-                        {option}
-                    </option>
-                ))}
+                {rawOptions.map((opt, idx) => {
+                    const optValue = resolveOptionValue(opt);
+                    const optLabel = resolveOptionDisplayLabel(opt, selectedLanguage);
+                    return (
+                        <option key={idx} value={optValue}>
+                            {optLabel}
+                        </option>
+                    );
+                })}
             </select>
         );
     }
 
+    if (field.type === "radio") {
+        const rawOptions = normalizeOptions(config?.options);
+
+        return (
+            <div className="radio-group" style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {rawOptions.map((opt, idx) => {
+                    const optValue = resolveOptionValue(opt);
+                    const optLabel = resolveOptionDisplayLabel(opt, selectedLanguage);
+                    return (
+                        <label key={idx} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <input
+                                type="radio"
+                                name={`field-${field.id}`}
+                                value={optValue}
+                                checked={formValues[field.id] === optValue}
+                                onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                            />
+                            <span>{optLabel}</span>
+                        </label>
+                    );
+                })}
+            </div>
+        );
+    }
+
     if (field.type === "checkbox") {
+        const rawOptions = normalizeOptions(config?.options);
+
+        if (rawOptions.length > 0) {
+            return (
+                <div className="checkbox-group" style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {rawOptions.map((opt, idx) => {
+                        const optValue = resolveOptionValue(opt);
+                        const optLabel = resolveOptionDisplayLabel(opt, selectedLanguage);
+                        return (
+                            <label key={idx} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <input
+                                    type="checkbox"
+                                    name={`field-${field.id}`}
+                                    value={optValue}
+                                    checked={
+                                        Array.isArray(formValues[field.id])
+                                            ? formValues[field.id].includes(optValue)
+                                            : Boolean(formValues[field.id])
+                                    }
+                                    onChange={(e) => handleFieldChange(field.id, e.target.checked)}
+                                />
+                                <span>{optLabel}</span>
+                            </label>
+                        );
+                    })}
+                </div>
+            );
+        }
+
         return (
             <div className="checkbox-preview">
                 <input
@@ -168,11 +309,49 @@ const renderPreviewInput = (
         <input
             id={inputId}
             type="text"
-            placeholder={resolveFieldLabel(field, selectedLanguage)}
+            placeholder={resolvedPlaceholder}
             value={formValues?.[field.id] || ""}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
         />
     );
+};
+
+const resolveText = (value, language = "en") => {
+    if (!value) return "";
+    if (typeof value === "string") {
+        try {
+            const parsed = JSON.parse(value);
+            if (typeof parsed === "object" && parsed !== null) {
+                return parsed[language] || parsed.en || "";
+            }
+        } catch (e) {
+            // Plain string
+        }
+        return value;
+    }
+    if (typeof value === "object" && value !== null) {
+        return value[language] || value.en || "";
+    }
+    return String(value);
+};
+
+const parseMultilingualText = (value) => {
+    if (!value) return { en: "", te: "" };
+    if (typeof value === "object" && value !== null) {
+        return { en: value.en || "", te: value.te || "" };
+    }
+    if (typeof value === "string") {
+        try {
+            const parsed = JSON.parse(value);
+            if (typeof parsed === "object" && parsed !== null) {
+                return { en: parsed.en || "", te: parsed.te || "" };
+            }
+        } catch (e) {
+            // Plain string
+        }
+        return { en: value, te: "" };
+    }
+    return { en: String(value), te: "" };
 };
 
 export default function Builder() {
@@ -180,8 +359,8 @@ export default function Builder() {
     const [retentionDays, setRetentionDays] = useState(30);
     const urlFormId = searchParams.get("id");
     const [selectedField, setSelectedField] = useState(null);
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
+    const [titleData, setTitleData] = useState({ en: "", te: "" });
+    const [descriptionData, setDescriptionData] = useState({ en: "", te: "" });
     const [fieldTypes, setFieldTypes] = useState([]);
     const [formId, setFormId] = useState(null);
     const [fields, setFields] = useState([]);
@@ -279,8 +458,8 @@ export default function Builder() {
             console.log("BUILDER RESPONSE:", response.data);
             const formData = response.data || {};
 
-            setTitle(formData.title || "");
-            setDescription(formData.description || "");
+            setTitleData(parseMultilingualText(formData.title));
+            setDescriptionData(parseMultilingualText(formData.description));
             setFields(
                 Array.isArray(formData.fields)
                     ? [...formData.fields].sort(
@@ -305,15 +484,28 @@ export default function Builder() {
         }
     };
     const createForm = async () => {
-        if (!title.trim()) {
+        const titleEn = titleData.en.trim();
+        const titleTe = titleData.te.trim();
+
+        if (!titleEn && !titleTe) {
             alert("Please enter a form title.");
             return;
         }
 
+        const titlePayload = JSON.stringify({
+            en: titleEn || titleTe,
+            te: titleTe,
+        });
+
+        const descriptionPayload = JSON.stringify({
+            en: descriptionData.en || "",
+            te: descriptionData.te || "",
+        });
+
         try {
             const response = await API.post("/forms/", {
-                title,
-                description,
+                title: titlePayload,
+                description: descriptionPayload,
             });
 
             const createdFormId = response.data.id;
@@ -420,8 +612,8 @@ export default function Builder() {
             const res = await API.get(`/forms/${formId}/versions/${version.id}`);
             const snapshot = res.data || {};
 
-            setTitle(snapshot.title || "");
-            setDescription(snapshot.description || "");
+            setTitleData(parseMultilingualText(snapshot.title));
+            setDescriptionData(parseMultilingualText(snapshot.description));
             setFields(Array.isArray(snapshot.fields) ? snapshot.fields : []);
             await fetchRules(formId);
         } catch (error) {
@@ -481,9 +673,14 @@ export default function Builder() {
             return;
         }
 
+        const payload = {
+            field_order: fieldData.field_order || fields.length + 1,
+            ...fieldData,
+        };
+
         try {
-            console.log("POST /forms/" + formId + "/fields", fieldData);
-            const response = await API.post(`/forms/${formId}/fields`, fieldData);
+            console.log("POST /forms/" + formId + "/fields", payload);
+            const response = await API.post(`/forms/${formId}/fields`, payload);
             console.log("Field added response", response.data);
 
             await fetchForm(formId);
@@ -670,21 +867,48 @@ export default function Builder() {
 
                     <div className="form-grid">
                         <div className="form-group">
-                            <label>Form Title</label>
+                            <label>English Form Title</label>
                             <input
                                 type="text"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                placeholder="Enter form title"
+                                value={titleData.en}
+                                onChange={(e) =>
+                                    setTitleData((prev) => ({ ...prev, en: e.target.value }))
+                                }
+                                placeholder="Enter English form title"
                             />
                         </div>
 
                         <div className="form-group">
-                            <label>Description</label>
+                            <label>Telugu Form Title</label>
+                            <input
+                                type="text"
+                                value={titleData.te}
+                                onChange={(e) =>
+                                    setTitleData((prev) => ({ ...prev, te: e.target.value }))
+                                }
+                                placeholder="Enter Telugu form title"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>English Description</label>
                             <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Registration form for students"
+                                value={descriptionData.en}
+                                onChange={(e) =>
+                                    setDescriptionData((prev) => ({ ...prev, en: e.target.value }))
+                                }
+                                placeholder="Enter English description"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Telugu Description</label>
+                            <textarea
+                                value={descriptionData.te}
+                                onChange={(e) =>
+                                    setDescriptionData((prev) => ({ ...prev, te: e.target.value }))
+                                }
+                                placeholder="Enter Telugu description"
                             />
                         </div>
                     </div>
@@ -869,9 +1093,9 @@ export default function Builder() {
                             {previewMode ? (
                                 <div className="preview-form">
                                     <div className="preview-header">
-                                        <h2>{title || "Untitled Form"}</h2>
+                                        <h2>{resolveText(titleData, selectedLanguage) || "Untitled Form"}</h2>
                                         <p>
-                                            {description || "This is how your form will look to respondents."}
+                                            {resolveText(descriptionData, selectedLanguage) || "This is how your form will look to respondents."}
                                         </p>
                                     </div>
 

@@ -19,6 +19,25 @@ import { getAnalyticsApi } from "../api/analyticsApi";
 
 import "./Dashboard.css";
 
+const resolveText = (value, language = "en") => {
+    if (!value) return "";
+    if (typeof value === "string") {
+        try {
+            const parsed = JSON.parse(value);
+            if (typeof parsed === "object" && parsed !== null) {
+                return parsed[language] || parsed.en || "";
+            }
+        } catch (e) {
+            // Plain string
+        }
+        return value;
+    }
+    if (typeof value === "object" && value !== null) {
+        return value[language] || value.en || "";
+    }
+    return String(value);
+};
+
 export default function Dashboard() {
 
     const [analytics, setAnalytics] = useState(null);
@@ -194,7 +213,7 @@ export default function Dashboard() {
 
                             <tr key={form.id}>
 
-                                <td>{form.title}</td>
+                                <td>{resolveText(form.title)}</td>
 
                                 <td>{form.status}</td>
 
