@@ -849,24 +849,24 @@ export default function Builder() {
                             <p className="header-copy">Design forms, manage versions, and publish with confidence.</p>
                         </div>
                         <div className="header-actions">
-                            <label className="form-group" style={{ margin: 0, minWidth: 170 }}>
-                                <span style={{ display: "block", fontSize: "0.8rem", marginBottom: 4 }}>Label Language</span>
+                            <label className="lang-select-label">
+                                Language
                                 <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)}>
                                     <option value="en">English (en)</option>
                                     <option value="te">Telugu (te)</option>
                                 </select>
                             </label>
-                            <button className="ghost-btn" onClick={() => setPreviewMode(!previewMode)}>
+                            <button className="primary-btn" onClick={() => setPreviewMode(!previewMode)}>
                                 {previewMode ? "Back to Builder" : "Preview Form"}
                             </button>
                             <button className="primary-btn" onClick={publishCurrentForm} disabled={!formId}>
                                 Publish
                             </button>
-                            <button className="secondary-btn" onClick={archiveCurrentForm} disabled={!formId}>
+                            <button className="primary-btn" onClick={archiveCurrentForm} disabled={!formId}>
                                 Archive
                             </button>
-                            <button className="ghost-btn" onClick={generateShareLink} disabled={!formId || isGeneratingShare}>
-                                {isGeneratingShare ? "Generating..." : "Share"}
+                            <button className="primary-btn" onClick={generateShareLink} disabled={!formId || isGeneratingShare}>
+                                {isGeneratingShare ? "Generating..." : (shareUrl ? "Shareable Link" : "Get Shareable Link")}
                             </button>
                             <button className="primary-btn" onClick={createForm} disabled={formId !== null}>
                                 {formId ? "Form Created" : "Create Form"}
@@ -931,7 +931,7 @@ export default function Builder() {
                     <section className="version-history">
                         <div className="version-history-header">
                             <div>
-                                <p className="eyebrow">Version History</p>
+                                <p className="eyebrow">VERSION HISTORY</p>
                                 <h2>Versions</h2>
                             </div>
                             {isPublished && (
@@ -943,60 +943,64 @@ export default function Builder() {
 
                         <div className="version-summary">
                             <div className="version-summary-item">
-                                <span>Selected Version</span>
-                                <strong>{selectedVersion ? selectedVersion.version : "None"}</strong>
+                                <span className="summary-label">Selected Version</span>
+                                <strong className="summary-val">{selectedVersion ? selectedVersion.version : "—"}</strong>
                             </div>
                             <div className="version-summary-item">
-                                <span>Status</span>
-                                <span
-                                    className={`version-badge ${normalizeVersionStatus(selectedVersion?.status) || "draft"}`}
-                                >
-                                    {selectedVersion?.status || "Draft"}
-                                </span>
+                                <span className="summary-label">Status</span>
+                                <div>
+                                    <span
+                                        className={`version-badge ${normalizeVersionStatus(selectedVersion?.status) || "draft"}`}
+                                    >
+                                        {selectedVersion?.status ? selectedVersion.status.toUpperCase() : "DRAFT"}
+                                    </span>
+                                </div>
                             </div>
                             <div className="version-summary-item">
-                                <span>Published</span>
-                                <strong>{formatDate(selectedVersion?.published_at)}</strong>
+                                <span className="summary-label">Published</span>
+                                <strong className="summary-val">{formatDate(selectedVersion?.published_at)}</strong>
                             </div>
                             <div className="version-summary-item">
-                                <span>Created</span>
-                                <strong>{formatDate(selectedVersion?.created_at)}</strong>
+                                <span className="summary-label">Created</span>
+                                <strong className="summary-val">{formatDate(selectedVersion?.created_at)}</strong>
                             </div>
                         </div>
 
                         <div className="version-list">
                             {versions.length === 0 ? (
-                                <div className="empty-state">No versions yet.</div>
+                                <div className="empty-state">No versions available.</div>
                             ) : (
-                                versions.map((version) => (
-                                    <button
-                                        key={version.id}
-                                        type="button"
-                                        className={`version-card ${selectedVersion?.id === version.id ? "active" : ""
-                                            }`}
-                                        onClick={() => handleVersionSelect(version)}
-                                    >
-                                        <div className="version-card-top">
-                                            <strong>Version {version.version}</strong>
-                                            <span
-                                                className={`version-badge ${normalizeVersionStatus(version?.status) || "draft"}`}
-                                            >
-                                                {version.status}
-                                            </span>
-                                        </div>
-                                        <div className="version-card-details">
-                                            <div>
-                                                <span className="detail-label">Published</span>
-                                                <strong>{formatDate(version.published_at)}</strong>
-                                            </div>
+                                versions.map((version) => {
+                                    const statusClass = normalizeVersionStatus(version?.status) || "draft";
+                                    const isSelected = selectedVersion?.id === version.id;
 
-                                            <div>
-                                                <span className="detail-label">Created</span>
-                                                <strong>{formatDate(version.created_at)}</strong>
+                                    return (
+                                        <button
+                                            key={version.id}
+                                            type="button"
+                                            className={`version-card ${isSelected ? "active" : ""}`}
+                                            onClick={() => handleVersionSelect(version)}
+                                        >
+                                            <div className="version-card-content">
+                                                <div className="version-card-left">
+                                                    <h3 className="version-card-title">Version {version.version}</h3>
+                                                    <p className="version-card-meta">
+                                                        Published: {formatDate(version.published_at)}
+                                                    </p>
+                                                </div>
+                                                <div className="version-card-right">
+                                                    <span className={`version-badge ${statusClass}`}>
+                                                        {version.status ? version.status.toUpperCase() : "DRAFT"}
+                                                    </span>
+                                                    <div className="version-card-created">
+                                                        <span className="created-label">Created:</span>
+                                                        <span className="created-value">{formatDate(version.created_at)}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </button>
-                                ))
+                                        </button>
+                                    );
+                                })
                             )}
                         </div>
                     </section>

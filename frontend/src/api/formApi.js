@@ -61,6 +61,12 @@ export const submitFormApi = (
     );
 export const getMyFormsApi = () =>
     API.get("/forms/my");
+export const getDashboardStatsApi = () =>
+    API.get("/dashboard/summary");
+export const getDashboardSummaryApi = () =>
+    API.get("/dashboard/summary");
+export const getDashboardAnalyticsApi = () =>
+    API.get("/dashboard/analytics");
 export default API;
 export const getRetentionPolicyApi = (formId) =>
     API.get(`/forms/${formId}/retention`);

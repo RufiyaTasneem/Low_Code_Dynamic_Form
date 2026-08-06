@@ -13,6 +13,7 @@ from app.routers import (
     conditional_rule,
     auth,
     audit_logs,
+    dashboard,
 )
 
 app = FastAPI(
@@ -59,3 +60,4 @@ app.include_router(public.router)
 app.include_router(conditional_rule.router)
 app.include_router(upload_router)
 app.include_router(audit_logs.router)
+app.include_router(dashboard.router)

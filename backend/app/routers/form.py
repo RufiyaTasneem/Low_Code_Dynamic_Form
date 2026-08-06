@@ -54,12 +54,101 @@ router = APIRouter(
 )
 
 
+from sqlalchemy import func
+from app.models.form import Form
+from app.models.form_version import FormVersion
+from app.models.response import Response
+
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+
+@router.get("/dashboard/stats")
+def get_dashboard_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    user_forms = db.query(Form).filter(Form.owner_id == current_user.id).all()
+    user_form_ids = [f.id for f in user_forms]
+
+    total_forms = len(user_forms)
+
+    published_forms = 0
+    draft_forms = 0
+
+    for f in user_forms:
+        latest_ver = (
+            db.query(FormVersion)
+            .filter(FormVersion.form_id == f.id)
+            .order_by(FormVersion.version.desc())
+            .first()
+        )
+        status = latest_ver.status if latest_ver else "Draft"
+        if status.lower() == "published":
+            published_forms += 1
+        elif status.lower() == "draft":
+            draft_forms += 1
+
+    total_responses = (
+        db.query(func.count(Response.id))
+        .filter(Response.form_id.in_(user_form_ids))
+        .scalar()
+        if user_form_ids else 0
+    )
+
+    recent_forms = []
+    for f in user_forms[:5]:
+        latest_ver = (
+            db.query(FormVersion)
+            .filter(FormVersion.form_id == f.id)
+            .order_by(FormVersion.version.desc())
+            .first()
+        )
+        resp_count = (
+            db.query(func.count(Response.id))
+            .filter(Response.form_id == f.id)
+            .scalar()
+        )
+        recent_forms.append({
+            "id": f.id,
+            "title": f.title,
+            "status": latest_ver.status if latest_ver else "Draft",
+            "responses": resp_count,
+            "updated_at": latest_ver.created_at.isoformat() if (latest_ver and latest_ver.created_at) else None
+        })
+
+    recent_responses_raw = (
+        db.query(Response)
+        .filter(Response.form_id.in_(user_form_ids))
+        .order_by(Response.submitted_at.desc())
+        .limit(5)
+        .all()
+        if user_form_ids else []
+    )
+
+    recent_responses = []
+    for r in recent_responses_raw:
+        form_obj = next((f for f in user_forms if f.id == r.form_id), None)
+        recent_responses.append({
+            "id": r.id,
+            "form_id": r.form_id,
+            "form_title": form_obj.title if form_obj else "Form",
+            "submitted_at": r.submitted_at.isoformat() if r.submitted_at else None
+        })
+
+    return {
+        "total_forms": total_forms,
+        "published_forms": published_forms,
+        "draft_forms": draft_forms,
+        "total_responses": total_responses,
+        "recent_forms": recent_forms,
+        "recent_responses": recent_responses,
+    }
 
 
 @router.post("/", response_model=FormResponse)

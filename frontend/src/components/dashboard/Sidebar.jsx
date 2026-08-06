@@ -30,19 +30,27 @@ export default function Sidebar() {
             </div>
 
             <nav>
-
-                <NavLink to="/dashboard">
+                <NavLink to="/dashboard" className={({ isActive }) => (isActive ? "active" : "")}>
                     Dashboard
                 </NavLink>
 
-                <NavLink to="/forms">
+                <NavLink to="/forms" className={({ isActive }) => (isActive ? "active" : "")}>
                     Forms
                 </NavLink>
 
-                <NavLink to="/builder">
+                <NavLink to="/builder" className={({ isActive }) => (isActive ? "active" : "")}>
                     Builder
                 </NavLink>
-                <NavLink to="/audit-logs">
+
+                <NavLink to="/analytics" className={({ isActive }) => (isActive ? "active" : "")}>
+                    Analytics
+                </NavLink>
+
+                <NavLink to="/responses" className={({ isActive }) => (isActive ? "active" : "")}>
+                    Responses
+                </NavLink>
+
+                <NavLink to="/audit-logs" className={({ isActive }) => (isActive ? "active" : "")}>
                     Audit Logs
                 </NavLink>
             </nav>
