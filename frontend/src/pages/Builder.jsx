@@ -255,18 +255,27 @@ const resolveOptionValue = (option) => {
                     {rawOptions.map((opt, idx) => {
                         const optValue = resolveOptionValue(opt);
                         const optLabel = resolveOptionDisplayLabel(opt, selectedLanguage);
+                        const currentList = Array.isArray(formValues[field.id])
+                            ? formValues[field.id]
+                            : [];
+                        const isChecked = currentList.includes(optValue);
+
                         return (
                             <label key={idx} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                 <input
                                     type="checkbox"
                                     name={`field-${field.id}`}
                                     value={optValue}
-                                    checked={
-                                        Array.isArray(formValues[field.id])
-                                            ? formValues[field.id].includes(optValue)
-                                            : Boolean(formValues[field.id])
-                                    }
-                                    onChange={(e) => handleFieldChange(field.id, e.target.checked)}
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                        let nextList;
+                                        if (e.target.checked) {
+                                            nextList = [...currentList, optValue];
+                                        } else {
+                                            nextList = currentList.filter((v) => v !== optValue);
+                                        }
+                                        handleFieldChange(field.id, nextList);
+                                    }}
                                 />
                                 <span>{optLabel}</span>
                             </label>

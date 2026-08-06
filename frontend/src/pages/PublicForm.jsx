@@ -325,18 +325,27 @@ function renderField(
                         {rawOptions.map((opt, idx) => {
                             const optValue = resolveOptionValue(opt);
                             const optLabel = resolveOptionDisplayLabel(opt, selectedLanguage);
+                            const currentList = Array.isArray(formValues[field.id])
+                                ? formValues[field.id]
+                                : [];
+                            const isChecked = currentList.includes(optValue);
+
                             return (
                                 <label key={idx} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                     <input
                                         type="checkbox"
                                         name={id}
                                         value={optValue}
-                                        checked={
-                                            Array.isArray(formValues[field.id])
-                                                ? formValues[field.id].includes(optValue)
-                                                : Boolean(formValues[field.id])
-                                        }
-                                        onChange={(e) => handleFieldChange(field.id, e.target.checked)}
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                            let nextList;
+                                            if (e.target.checked) {
+                                                nextList = [...currentList, optValue];
+                                            } else {
+                                                nextList = currentList.filter((v) => v !== optValue);
+                                            }
+                                            handleFieldChange(field.id, nextList);
+                                        }}
                                     />
                                     <span>{optLabel}</span>
                                 </label>
@@ -641,15 +650,12 @@ export default function PublicForm() {
                 const config = field.config || {};
                 const custom = config.validation_message;
                 if (custom && typeof custom === "object") {
-                    return {
-                        en: custom.en || defaultEn,
-                        te: custom.te || defaultTe,
-                    };
+                    return custom[selectedLanguage] || custom.en || (selectedLanguage === "te" ? defaultTe : defaultEn);
                 }
                 if (typeof custom === "string" && custom.trim()) {
-                    return { en: custom, te: custom };
+                    return custom;
                 }
-                return { en: defaultEn, te: defaultTe };
+                return selectedLanguage === "te" ? defaultTe : defaultEn;
             };
 
             for (const field of (form?.fields || [])) {
@@ -979,7 +985,12 @@ export default function PublicForm() {
                                         )}
                                         {errors?.[field.id] && (
                                             <div className="field-error">
-                                                {errors[field.id][0]}
+                                                {resolveText(
+                                                    Array.isArray(errors[field.id])
+                                                        ? errors[field.id][0]
+                                                        : errors[field.id],
+                                                    selectedLanguage
+                                                )}
                                             </div>
                                         )}
                                     </div>
