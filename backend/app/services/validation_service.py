@@ -5,6 +5,19 @@ from datetime import datetime
 EMAIL_REGEX = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
 
 
+def resolve_error_msg(field, default_en, default_te):
+    config = field.config or {}
+    val_msg = config.get("validation_message")
+    if isinstance(val_msg, dict):
+        return {
+            "en": val_msg.get("en") or default_en,
+            "te": val_msg.get("te") or default_te
+        }
+    if isinstance(val_msg, str) and val_msg.strip():
+        return {"en": val_msg, "te": val_msg}
+    return {"en": default_en, "te": default_te}
+
+
 def validate_field(field, value):
     """
     Returns a list of validation errors for one field.
@@ -21,7 +34,9 @@ def validate_field(field, value):
     # -------------------------
     if config.get("required"):
         if value is None or str(value).strip() == "":
-            errors.append(f"{field.label} is required.")
+            label_en = field.label.get("en") if isinstance(field.label, dict) else str(field.label)
+            label_te = field.label.get("te") if isinstance(field.label, dict) else str(field.label)
+            errors.append(resolve_error_msg(field, f"{label_en} is required.", f"{label_te} తప్పనిసరి."))
             return errors
 
     # Skip further validation if empty and not required
@@ -38,12 +53,12 @@ def validate_field(field, value):
 
         if min_len is not None and len(str(value)) < int(min_len):
             errors.append(
-                f"{field.label} must contain at least {min_len} characters."
+                resolve_error_msg(field, f"Must contain at least {min_len} characters.", f"కనీసం {min_len} అక్షరాలు ఉండాలి.")
             )
 
         if max_len is not None and len(str(value)) > int(max_len):
             errors.append(
-                f"{field.label} cannot exceed {max_len} characters."
+                resolve_error_msg(field, f"Cannot exceed {max_len} characters.", f"గరిష్టంగా {max_len} అక్షరాలు మించకూడదు.")
             )
 
     # -------------------------
@@ -52,7 +67,7 @@ def validate_field(field, value):
     elif field_type == "email":
 
         if not re.match(EMAIL_REGEX, str(value)):
-            errors.append("Invalid email address.")
+            errors.append(resolve_error_msg(field, "Invalid email address.", "చెల్లుబాటు అయ్యే ఇమెయిల్ చిరునామాను నమోదు చేయండి."))
 
     # -------------------------
     # NUMBER
@@ -65,17 +80,17 @@ def validate_field(field, value):
             if config.get("min") is not None:
                 if number < float(config["min"]):
                     errors.append(
-                        f"{field.label} must be at least {config['min']}."
+                        resolve_error_msg(field, f"Must be at least {config['min']}.", f"కనీసం {config['min']} అయి ఉండాలి.")
                     )
 
             if config.get("max") is not None:
                 if number > float(config["max"]):
                     errors.append(
-                        f"{field.label} cannot exceed {config['max']}."
+                        resolve_error_msg(field, f"Cannot exceed {config['max']}.", f"గరిష్టంగా {config['max']} మించకూడదు.")
                     )
 
         except (ValueError, TypeError):
-            errors.append(f"{field.label} must be a valid number.")
+            errors.append(resolve_error_msg(field, "Must be a valid number.", "చెల్లుబాటు అయ్యే సంఖ్య అయి ఉండాలి."))
 
     # -------------------------
     # DATE
@@ -93,7 +108,7 @@ def validate_field(field, value):
 
                 if date < min_date:
                     errors.append(
-                        f"{field.label} must be after {config['min_date']}."
+                        resolve_error_msg(field, f"Must be after {config['min_date']}.", f"{config['min_date']} తర్వాత ఉండాలి.")
                     )
 
             if config.get("max_date"):
@@ -104,11 +119,11 @@ def validate_field(field, value):
 
                 if date > max_date:
                     errors.append(
-                        f"{field.label} must be before {config['max_date']}."
+                        resolve_error_msg(field, f"Must be before {config['max_date']}.", f"{config['max_date']} కి ముందు ఉండాలి.")
                     )
 
         except ValueError:
-            errors.append("Invalid date.")
+            errors.append(resolve_error_msg(field, "Invalid date.", "చెల్లుబాటు అయ్యే తేదీ అయి ఉండాలి."))
 
     # -------------------------
     # DROPDOWN
@@ -125,16 +140,18 @@ def validate_field(field, value):
                 if item.strip()
             ]
         elif isinstance(options, list):
-            valid_options = [
-                str(item) for item in options if item is not None
-            ]
+            for item in options:
+                if isinstance(item, dict):
+                    valid_options.append(str(item.get("value") or item.get("label", {}).get("en") or ""))
+                elif item is not None:
+                    valid_options.append(str(item))
 
         print("Submitted value:", value)
         print("Valid options:", valid_options)
 
         if value not in valid_options:
             errors.append(
-                f"'{value}' is not a valid option for {field.label}."
+                resolve_error_msg(field, f"'{value}' is not a valid option.", f"'{value}' చెల్లుబాటు అయ్యే ఐచ్ఛికం కాదు.")
             )
 
     # -------------------------
@@ -142,6 +159,8 @@ def validate_field(field, value):
     # -------------------------
     elif field_type == "file":
         if value is None or str(value).strip() == "":
-            errors.append(f"{field.label} is required.")
+            label_en = field.label.get("en") if isinstance(field.label, dict) else str(field.label)
+            label_te = field.label.get("te") if isinstance(field.label, dict) else str(field.label)
+            errors.append(resolve_error_msg(field, f"{label_en} is required.", f"{label_te} తప్పనిసరి."))
     # File extension and size are already validated
     # during upload, so nothing more to validate here.

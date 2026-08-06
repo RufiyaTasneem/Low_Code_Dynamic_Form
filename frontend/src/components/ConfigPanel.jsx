@@ -318,37 +318,41 @@ function ConfigPanel({
             );
         }
 
-        if (item.name === "placeholder") {
+        if (item.name === "placeholder" || item.name === "validation_message") {
             const raw = config[item.name];
-            const placeholderObj =
+            const valObj =
                 typeof raw === "object" && raw !== null
                     ? raw
                     : { en: typeof raw === "string" ? raw : "", te: "" };
+
+            const isValMsg = item.name === "validation_message";
+            const placeholderEn = isValMsg ? "English Validation Message (e.g. This field is required)" : "English Placeholder";
+            const placeholderTe = isValMsg ? "Telugu Validation Message (e.g. ఈ ఫీల్డ్ తప్పనిసరి)" : "Telugu Placeholder";
 
             return (
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <input
                         type="text"
-                        placeholder="English Placeholder"
-                        value={placeholderObj.en || ""}
+                        placeholder={placeholderEn}
+                        value={valObj.en || ""}
                         disabled={isLocked}
                         onChange={(e) =>
                             handleChange(
                                 item.name,
-                                { ...placeholderObj, en: e.target.value },
+                                { ...valObj, en: e.target.value },
                                 item.type
                             )
                         }
                     />
                     <input
                         type="text"
-                        placeholder="Telugu Placeholder"
-                        value={placeholderObj.te || ""}
+                        placeholder={placeholderTe}
+                        value={valObj.te || ""}
                         disabled={isLocked}
                         onChange={(e) =>
                             handleChange(
                                 item.name,
-                                { ...placeholderObj, te: e.target.value },
+                                { ...valObj, te: e.target.value },
                                 item.type
                             )
                         }
@@ -367,6 +371,15 @@ function ConfigPanel({
             />
         );
     };
+
+    const hasValidationMsgInConfig = (fieldDefinition.config || []).some(
+        (item) => item.name === "validation_message"
+    );
+
+    const valMsgObj =
+        typeof config.validation_message === "object" && config.validation_message !== null
+            ? config.validation_message
+            : { en: typeof config.validation_message === "string" ? config.validation_message : "", te: "" };
 
     return (
         <div>
@@ -408,6 +421,40 @@ function ConfigPanel({
                     {renderConfigInput(item)}
                 </div>
             ))}
+
+            {!hasValidationMsgInConfig && (
+                <div className="form-group">
+                    <label>Validation Message (Optional)</label>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <input
+                            type="text"
+                            placeholder="English (e.g. This field is required)"
+                            value={valMsgObj.en || ""}
+                            disabled={isLocked}
+                            onChange={(e) =>
+                                handleChange(
+                                    "validation_message",
+                                    { ...valMsgObj, en: e.target.value },
+                                    "text"
+                                )
+                            }
+                        />
+                        <input
+                            type="text"
+                            placeholder="Telugu (e.g. ఈ ఫీల్డ్ తప్పనిసరి)"
+                            value={valMsgObj.te || ""}
+                            disabled={isLocked}
+                            onChange={(e) =>
+                                handleChange(
+                                    "validation_message",
+                                    { ...valMsgObj, te: e.target.value },
+                                    "text"
+                                )
+                            }
+                        />
+                    </div>
+                </div>
+            )}
 
             {isLocked && (
                 <p className="locked-message">

@@ -637,6 +637,21 @@ export default function PublicForm() {
             // -----------------------
             // Client-side validation
             // -----------------------
+            const getValidationErr = (field, defaultEn, defaultTe) => {
+                const config = field.config || {};
+                const custom = config.validation_message;
+                if (custom && typeof custom === "object") {
+                    return {
+                        en: custom.en || defaultEn,
+                        te: custom.te || defaultTe,
+                    };
+                }
+                if (typeof custom === "string" && custom.trim()) {
+                    return { en: custom, te: custom };
+                }
+                return { en: defaultEn, te: defaultTe };
+            };
+
             for (const field of (form?.fields || [])) {
                 const value = formValues[field.id];
                 const config = field.config || {};
@@ -649,7 +664,10 @@ export default function PublicForm() {
                     (config.required || fieldStates?.[field.id]?.required) &&
                     !uploadedFiles[field.id]
                 ) {
-                    alert(`${resolveFieldLabel(field, selectedLanguage)} is required`);
+                    const labelEn = resolveFieldLabel(field, "en") || "File";
+                    const labelTe = resolveFieldLabel(field, "te") || "ఫైల్";
+                    const errObj = getValidationErr(field, `${labelEn} is required`, `${labelTe} తప్పనిసరి`);
+                    alert(resolveText(errObj, selectedLanguage));
                     return;
                 }
 
@@ -664,17 +682,14 @@ export default function PublicForm() {
                         selectedRating < 1 ||
                         selectedRating > 5
                     ) {
+                        const errObj = getValidationErr(field, "Please select a rating.", "దయచేసి రేటింగ్‌ను ఎంచుకోండి.");
                         setErrors((prev) => ({
                             ...prev,
-                            [field.id]: ["Please select a rating."],
+                            [field.id]: [errObj],
                         }));
                         return;
                     }
                 }
-
-                // -----------------------
-                // File Validation
-                // -----------------------
 
                 // -----------------------
                 // Email Validation
@@ -683,7 +698,13 @@ export default function PublicForm() {
                     try {
                         z.string().email().parse(value);
                     } catch {
-                        alert(`${resolveFieldLabel(field, selectedLanguage)} must be a valid email`);
+                        const labelEn = resolveFieldLabel(field, "en") || "Email";
+                        const labelTe = resolveFieldLabel(field, "te") || "ఇమెయిల్";
+                        const errObj = getValidationErr(field, `${labelEn} must be a valid email`, `${labelTe} చెల్లుబాటు అయ్యే ఇమెయిల్ అయి ఉండాలి`);
+                        setErrors((prev) => ({
+                            ...prev,
+                            [field.id]: [errObj],
+                        }));
                         return;
                     }
                 }
@@ -694,7 +715,13 @@ export default function PublicForm() {
                 if (field.type === "number" && value !== "") {
 
                     if (isNaN(Number(value))) {
-                        alert(`${resolveFieldLabel(field, selectedLanguage)} must be a valid number`);
+                        const labelEn = resolveFieldLabel(field, "en") || "Number";
+                        const labelTe = resolveFieldLabel(field, "te") || "సంఖ్య";
+                        const errObj = getValidationErr(field, `${labelEn} must be a valid number`, `${labelTe} చెల్లుబాటు అయ్యే సంఖ్య అయి ఉండాలి`);
+                        setErrors((prev) => ({
+                            ...prev,
+                            [field.id]: [errObj],
+                        }));
                         return;
                     }
 
@@ -702,7 +729,13 @@ export default function PublicForm() {
                         config.min !== undefined &&
                         Number(value) < Number(config.min)
                     ) {
-                        alert(`${resolveFieldLabel(field, selectedLanguage)} must be at least ${config.min}`);
+                        const labelEn = resolveFieldLabel(field, "en");
+                        const labelTe = resolveFieldLabel(field, "te");
+                        const errObj = getValidationErr(field, `${labelEn} must be at least ${config.min}`, `${labelTe} కనీసం ${config.min} అయి ఉండాలి`);
+                        setErrors((prev) => ({
+                            ...prev,
+                            [field.id]: [errObj],
+                        }));
                         return;
                     }
 
@@ -710,7 +743,13 @@ export default function PublicForm() {
                         config.max !== undefined &&
                         Number(value) > Number(config.max)
                     ) {
-                        alert(`${resolveFieldLabel(field, selectedLanguage)} must be at most ${config.max}`);
+                        const labelEn = resolveFieldLabel(field, "en");
+                        const labelTe = resolveFieldLabel(field, "te");
+                        const errObj = getValidationErr(field, `${labelEn} must be at most ${config.max}`, `${labelTe} గరిష్టంగా ${config.max} అయి ఉండాలి`);
+                        setErrors((prev) => ({
+                            ...prev,
+                            [field.id]: [errObj],
+                        }));
                         return;
                     }
                 }
@@ -724,7 +763,13 @@ export default function PublicForm() {
                         config.min_length &&
                         value.length < config.min_length
                     ) {
-                        alert(`${resolveFieldLabel(field, selectedLanguage)} is too short`);
+                        const labelEn = resolveFieldLabel(field, "en");
+                        const labelTe = resolveFieldLabel(field, "te");
+                        const errObj = getValidationErr(field, `${labelEn} is too short`, `${labelTe} చాలా చిన్నగా ఉంది`);
+                        setErrors((prev) => ({
+                            ...prev,
+                            [field.id]: [errObj],
+                        }));
                         return;
                     }
 
@@ -732,7 +777,13 @@ export default function PublicForm() {
                         config.max_length &&
                         value.length > config.max_length
                     ) {
-                        alert(`${resolveFieldLabel(field, selectedLanguage)} is too long`);
+                        const labelEn = resolveFieldLabel(field, "en");
+                        const labelTe = resolveFieldLabel(field, "te");
+                        const errObj = getValidationErr(field, `${labelEn} is too long`, `${labelTe} చాలా పెద్దగా ఉంది`);
+                        setErrors((prev) => ({
+                            ...prev,
+                            [field.id]: [errObj],
+                        }));
                         return;
                     }
                 }

@@ -21,6 +21,11 @@ def get_field_types():
                     name="placeholder",
                     type="text",
                     label="Placeholder"
+                ),
+                ConfigProperty(
+                    name="validation_message",
+                    type="text",
+                    label="Validation Message"
                 )
             ]
         ),
@@ -43,26 +48,36 @@ def get_field_types():
                     name="decimal",
                     type="boolean",
                     label="Allow Decimal"
+                ),
+                ConfigProperty(
+                    name="validation_message",
+                    type="text",
+                    label="Validation Message"
                 )
             ]
         ),
 
         FieldType(
-    type="email",
-    label="Email",
-    config=[
-        ConfigProperty(
-            name="placeholder",
-            type="text",
-            label="Placeholder"
+            type="email",
+            label="Email",
+            config=[
+                ConfigProperty(
+                    name="placeholder",
+                    type="text",
+                    label="Placeholder"
+                ),
+                ConfigProperty(
+                    name="required",
+                    type="boolean",
+                    label="Required"
+                ),
+                ConfigProperty(
+                    name="validation_message",
+                    type="text",
+                    label="Validation Message"
+                )
+            ]
         ),
-        ConfigProperty(
-            name="required",
-            type="boolean",
-            label="Required"
-        )
-    ]
-),
 
         FieldType(
             type="dropdown",
@@ -72,6 +87,11 @@ def get_field_types():
                     name="options",
                     type="list",
                     label="Options"
+                ),
+                ConfigProperty(
+                    name="validation_message",
+                    type="text",
+                    label="Validation Message"
                 )
             ]
         ),
@@ -84,6 +104,11 @@ def get_field_types():
                     name="options",
                     type="list",
                     label="Options"
+                ),
+                ConfigProperty(
+                    name="validation_message",
+                    type="text",
+                    label="Validation Message"
                 )
             ]
         ),
@@ -101,6 +126,11 @@ def get_field_types():
                     name="max_date",
                     type="date",
                     label="Maximum Date"
+                ),
+                ConfigProperty(
+                    name="validation_message",
+                    type="text",
+                    label="Validation Message"
                 )
             ]
         ),
@@ -118,6 +148,11 @@ def get_field_types():
                     name="max_size",
                     type="number",
                     label="Maximum Size (MB)"
+                ),
+                ConfigProperty(
+                    name="validation_message",
+                    type="text",
+                    label="Validation Message"
                 )
             ]
         ),
@@ -130,6 +165,11 @@ def get_field_types():
                     name="max_rating",
                     type="number",
                     label="Maximum Rating"
+                ),
+                ConfigProperty(
+                    name="validation_message",
+                    type="text",
+                    label="Validation Message"
                 )
             ]
         )
