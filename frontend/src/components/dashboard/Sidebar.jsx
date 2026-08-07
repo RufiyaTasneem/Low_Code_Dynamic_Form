@@ -1,10 +1,12 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { LogOut } from "lucide-react";
+import LanguageSwitcher from "../LanguageSwitcher";
 import "./Sidebar.css";
 
 export default function Sidebar() {
-
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const logout = () => {
         localStorage.removeItem("token");
@@ -13,41 +15,34 @@ export default function Sidebar() {
     };
 
     return (
-
         <aside className="sidebar">
-
             <div className="logo">
-
-                <div className="logo-icon">
-                    ✨
-                </div>
-
+                <div className="logo-icon">✨</div>
                 <div>
                     <h2>Form Studio</h2>
                     <p>Dynamic Builder</p>
                 </div>
-
             </div>
 
             <nav>
                 <NavLink to="/dashboard" className={({ isActive }) => (isActive ? "active" : "")}>
-                    Dashboard
+                    {t("Dashboard")}
                 </NavLink>
 
                 <NavLink to="/forms" className={({ isActive }) => (isActive ? "active" : "")}>
-                    Forms
+                    {t("Forms")}
                 </NavLink>
 
                 <NavLink to="/builder" className={({ isActive }) => (isActive ? "active" : "")}>
-                    Builder
+                    {t("Builder")}
                 </NavLink>
 
                 <NavLink to="/analytics" className={({ isActive }) => (isActive ? "active" : "")}>
-                    Analytics
+                    {t("Analytics")}
                 </NavLink>
 
                 <NavLink to="/responses" className={({ isActive }) => (isActive ? "active" : "")}>
-                    Responses
+                    {t("Responses")}
                 </NavLink>
 
                 <NavLink to="/audit-logs" className={({ isActive }) => (isActive ? "active" : "")}>
@@ -55,16 +50,14 @@ export default function Sidebar() {
                 </NavLink>
             </nav>
 
-            <button
-                className="logout-btn"
-                onClick={logout}
-            >
-                <LogOut size={18} />
-                Logout
-            </button>
+            <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
+                <LanguageSwitcher />
 
+                <button className="logout-btn" onClick={logout}>
+                    <LogOut size={18} />
+                    {t("Logout")}
+                </button>
+            </div>
         </aside>
-
     );
-
 }

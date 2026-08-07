@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import TopBar from "../components/dashboard/TopBar";
 import { getDashboardSummaryApi, getDashboardAnalyticsApi } from "../api/formApi";
@@ -62,6 +63,7 @@ const resolveText = (value, language = "en") => {
 };
 
 export default function Dashboard() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [analytics, setAnalytics] = useState(null);

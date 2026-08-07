@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import "./Testimonials.css";
 
 const testimonials = [
@@ -19,11 +20,13 @@ const testimonials = [
 ];
 
 export default function Testimonials() {
+    const { t } = useTranslation();
+
     return (
         <section className="testimonials-section">
             <div className="section-heading">
-                <span className="section-tag">Testimonials</span>
-                <h2>Loved by teams shipping faster</h2>
+                <span className="section-tag">{t("Testimonials")}</span>
+                <h2>{t("Loved by teams shipping faster")}</h2>
             </div>
 
             <div className="testimonial-grid">

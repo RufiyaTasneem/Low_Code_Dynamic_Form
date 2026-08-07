@@ -12,8 +12,10 @@ import {
     YAxis,
     CartesianGrid,
     Legend,
+    LabelList,
 } from "recharts";
-import { LabelList } from "recharts";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 import ExportDropdown from "../components/dashboard/ExportDropdown";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import TopBar from "../components/dashboard/TopBar";
@@ -40,105 +42,94 @@ const resolveFieldLabel = (field, language = "en") => {
 };
 
 export default function Analytics() {
+    const { t, i18n } = useTranslation();
     const [searchParams] = useSearchParams();
     const formId = searchParams.get("id");
     const navigate = useNavigate();
 
     const [analytics, setAnalytics] = useState(null);
-    const [selectedLanguage, setSelectedLanguage] = useState("en");
 
     useEffect(() => {
-        loadAnalytics();
+        if (!formId) return;
+
+        getAnalyticsApi(formId)
+            .then((res) => {
+                setAnalytics(res.data);
+            })
+            .catch((err) => console.error(err));
     }, [formId]);
 
-    async function loadAnalytics() {
-        try {
-            const res = await getAnalyticsApi(formId);
-            setAnalytics(res.data);
-        } catch (err) {
-            console.error(err);
-        }
-    }
+    if (!analytics) return <div className="loading">{t("Loading...")}</div>;
 
     const barData = [
         {
-            name: "Responses",
-            value: analytics?.total_submissions || 0,
+            name: t("Submissions"),
+            value: analytics?.total_submissions ?? analytics?.total_responses ?? 0,
         },
         {
-            name: "Fields",
-            value: analytics?.total_fields || 0,
+            name: t("Completion"),
+            value: analytics?.completed_responses ?? 0,
         },
     ];
 
     const pieData = [
-        {
-            name: "Completed",
-            value: analytics?.completion_rate || 0,
-        },
+        { name: t("Completion Rate"), value: analytics?.completion_rate ?? 0 },
         {
             name: "Remaining",
-            value: 100 - (analytics?.completion_rate || 0),
+            value: 100 - (analytics?.completion_rate ?? 0),
         },
     ];
 
     return (
         <DashboardLayout>
-            <div className="analytics-header">
-                <TopBar
-                    title="Analytics"
-                    subtitle="View performance of this form"
-                />
+            <TopBar
+                title={t("Analytics")}
+                subtitle={t("View form performance and metrics")}
+            />
 
-                <div className="analytics-actions">
-                    <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.9rem" }}>
-                        Language
-                        <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)}>
-                            <option value="en">English (en)</option>
-                            <option value="te">Telugu (te)</option>
-                        </select>
-                    </label>
+            <div className="analytics-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
+                <button
+                    className="responses-btn"
+                    onClick={() => navigate(`/responses?id=${formId}`)}
+                >
+                    📄 {t("Responses")}
+                </button>
 
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <LanguageSwitcher />
                     <ExportDropdown formId={formId} />
-
-                    <button
-                        className="responses-btn"
-                        onClick={() => navigate(`/responses?id=${formId}`)}
-                    >
-                        📄 Responses
-                    </button>
                 </div>
             </div>
 
             <div className="cards">
                 <SummaryCard
-                    title="Submissions"
-                    value={analytics?.total_submissions ?? "--"}
+                    title={t("Submissions")}
+                    value={analytics?.total_submissions ?? analytics?.total_responses ?? "--"}
                 />
 
                 <SummaryCard
-                    title="Completion"
+                    title={t("Completion")}
                     value={`${analytics?.completion_rate ?? "--"}%`}
                 />
 
                 <SummaryCard
-                    title="Average Time"
+                    title={t("Average Time")}
                     value={`${analytics?.average_completion_time ?? "--"} sec`}
                 />
 
                 <SummaryCard
-                    title="Fields"
+                    title={t("Fields")}
                     value={analytics?.total_fields ?? "--"}
                 />
             </div>
 
             <div className="charts">
-
                 <div className="chart-card">
-                    <h3>Overview</h3>
+                    <h3>{t("Overview")}</h3>
 
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barData}>
+                            <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="name" />
                             <YAxis allowDecimals={false} />
                             <Tooltip />
@@ -146,14 +137,9 @@ export default function Analytics() {
                                 dataKey="value"
                                 fill="var(--accent)"
                                 radius={[8, 8, 0, 0]}
-                            />
-                            <Bar
-                                dataKey="count"
-                                fill="var(--accent)"
-                                radius={[8, 8, 0, 0]}
                             >
                                 <LabelList
-                                    dataKey="count"
+                                    dataKey="value"
                                     position="top"
                                 />
                             </Bar>
@@ -162,7 +148,7 @@ export default function Analytics() {
                 </div>
 
                 <div className="chart-card">
-                    <h3>Completion</h3>
+                    <h3>{t("Completion")}</h3>
 
                     <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
@@ -180,17 +166,14 @@ export default function Analytics() {
                         </PieChart>
                     </ResponsiveContainer>
                 </div>
-
             </div>
 
             <h2 className="analytics-title">
-                📊 Question Analytics
+                📊 {t("Question Analytics")}
             </h2>
 
             {analytics?.field_distributions?.length > 0 ? (
-
                 analytics.field_distributions.map((field) => {
-
                     const total = Object.values(field.distribution).reduce(
                         (a, b) => a + b,
                         0
@@ -200,34 +183,29 @@ export default function Analytics() {
                         ([label, count]) => ({
                             label,
                             count,
-                            percentage: ((count / total) * 100).toFixed(1),
+                            percentage: total > 0 ? ((count / total) * 100).toFixed(1) : 0,
                         })
                     );
 
                     return (
-
                         <div
                             className="chart-card"
                             key={field.field_id}
                             style={{ marginBottom: "30px" }}
                         >
-
                             <div className="chart-heading">
-                                <h3>{resolveFieldLabel(field, selectedLanguage)}</h3>
+                                <h3>{resolveFieldLabel(field, i18n.language || "en")}</h3>
 
                                 <p>
                                     {field.type === "dropdown"
-                                        ? "Distribution of selected options"
-                                        : "Distribution of ratings"}
+                                        ? t("Distribution of selected options")
+                                        : t("Distribution of ratings")}
                                 </p>
                             </div>
 
                             {field.type === "dropdown" ? (
-
                                 <ResponsiveContainer width="100%" height={320}>
-
                                     <PieChart>
-
                                         <Pie
                                             data={chartData}
                                             dataKey="count"
@@ -238,40 +216,30 @@ export default function Analytics() {
                                                 `${(percent * 100).toFixed(0)}%`
                                             }
                                         >
-
                                             {chartData.map((entry, index) => (
-
                                                 <Cell
                                                     key={index}
                                                     fill={COLORS[index % COLORS.length]}
                                                 />
-
                                             ))}
-
                                         </Pie>
 
                                         <Tooltip />
 
                                         <Legend />
-
                                     </PieChart>
-
                                 </ResponsiveContainer>
-
                             ) : (
-
                                 <ResponsiveContainer width="100%" height={320}>
-
                                     <BarChart
                                         data={chartData}
                                         margin={{
                                             top: 20,
                                             right: 20,
                                             left: 0,
-                                            bottom: 0
+                                            bottom: 0,
                                         }}
                                     >
-
                                         <CartesianGrid strokeDasharray="3 3" />
 
                                         <XAxis dataKey="label" />
@@ -284,25 +252,15 @@ export default function Analytics() {
                                             dataKey="count"
                                             fill="var(--accent)"
                                         />
-
                                     </BarChart>
-
                                 </ResponsiveContainer>
-
                             )}
-
                         </div>
-
                     );
-
                 })
-
             ) : (
-
-                <p>No dropdown or rating analytics available.</p>
-
+                <p>{t("No dropdown or rating analytics available.")}</p>
             )}
-
         </DashboardLayout>
     );
 }

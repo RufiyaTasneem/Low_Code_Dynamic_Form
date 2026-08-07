@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-
+import { useTranslation } from "react-i18next";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import TopBar from "../components/dashboard/TopBar";
 import {
@@ -11,6 +11,7 @@ import {
 import "./Responses.css";
 
 export default function Responses() {
+    const { t } = useTranslation();
     const [responses, setResponses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -118,20 +119,20 @@ export default function Responses() {
 
             </div>
             <div className="responses-page">
-                <h2>Response Browser</h2>
+                <h2>{t("Responses")}</h2>
                 <div className="bulk-actions">
                     <button
                         className="delete-selected-btn"
                         disabled={selectedResponses.length === 0}
                         onClick={() => setShowDeleteModal(true)}
                     >
-                        🗑 Delete Selected ({selectedResponses.length})
+                        🗑 {t("Delete")} ({selectedResponses.length})
                     </button>
                 </div>
                 {loading ? (
-                    <p>Loading responses...</p>
+                    <p>{t("Loading...")}</p>
                 ) : responses.length === 0 ? (
-                    <p>No responses found.</p>
+                    <p>{t("No responses found.")}</p>
                 ) : (
                     <>
                         <table className="responses-table">

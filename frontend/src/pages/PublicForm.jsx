@@ -11,6 +11,7 @@ import {
 import { z } from "zod";
 import { SUPPORTED_LANGUAGES } from "../constants/languageConstants";
 import {
+    translate,
     getTranslatedText,
     resolveText,
     resolveFieldLabel,

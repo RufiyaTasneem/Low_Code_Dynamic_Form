@@ -43,6 +43,7 @@ from app.services.form_service import (
     get_draft,
     get_version,
     get_user_forms,
+    delete_form_service,
 )
 from app.services.form_link_service import (
     generate_link,
@@ -413,4 +414,17 @@ def update_retention(
         db,
         form_id,
         data.retention_days,
+    )
+
+
+@router.delete("/{form_id}")
+def delete_form_route(
+    form_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return delete_form_service(
+        db=db,
+        form_id=form_id,
+        user_id=current_user.id,
     )

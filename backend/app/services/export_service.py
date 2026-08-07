@@ -10,28 +10,53 @@ from app.models.response import Response
 from app.models.response_value import ResponseValue
 
 
+def _get_english_str(val, default=""):
+    """
+    Safely extract a string representation from val, which may be a string,
+    a dictionary (e.g. {"en": "Label", "te": "..."}), or a JSON string representation
+    of a dictionary. Prefers 'en', falls back to first available non-empty value.
+    """
+    if val is None:
+        return default
+    if isinstance(val, dict):
+        if "en" in val and val["en"]:
+            return str(val["en"])
+        for v in val.values():
+            if v:
+                return str(v)
+        return default
+    if isinstance(val, str):
+        trimmed = val.strip()
+        if trimmed.startswith("{") and trimmed.endswith("}"):
+            try:
+                parsed = json.loads(val)
+                if isinstance(parsed, dict):
+                    return _get_english_str(parsed, default)
+            except Exception:
+                pass
+        return val
+    return str(val)
+
+
 def export_form_responses(
     db: Session,
     form_id: int,
     format: str = "csv",
 ):
-    # Fetch all fields for the form
-
     form = (
-    db.query(Form)
-    .filter(Form.id == form_id)
-    .first()
+        db.query(Form)
+        .filter(Form.id == form_id)
+        .first()
     )
-    filename = (
-    form.title.replace(" ", "_")
-    if form
-    else f"form_{form_id}"
-    )
+    raw_title = form.title if form else None
+    title_str = _get_english_str(raw_title, default=f"form_{form_id}")
+    filename = title_str.replace(" ", "_") if title_str else f"form_{form_id}"
+
     fields = (
-            db.query(Field)
-            .filter(Field.form_id == form_id)
-            .order_by(Field.field_order)
-            .all()
+        db.query(Field)
+        .filter(Field.form_id == form_id)
+        .order_by(Field.field_order)
+        .all()
     )
 
     # Fetch all responses
@@ -55,10 +80,10 @@ def export_form_responses(
             for value in values
         }
 
-        row = {
-            field.label: value_map.get(field.id, "")
-            for field in fields
-        }
+        row = {}
+        for field in fields:
+            label_key = _get_english_str(field.label, default=f"Field_{field.id}")
+            row[label_key] = value_map.get(field.id, "")
 
         row["Submitted At"] = (
             str(response.submitted_at)
@@ -81,10 +106,10 @@ def export_form_responses(
             iter([json_data]),
             media_type="application/json",
             headers={
-    "Content-Disposition": (
-        f'attachment; filename="{filename}_responses.json"'
-    )
-}
+                "Content-Disposition": (
+                    f'attachment; filename="{filename}_responses.json"'
+                )
+            }
         )
 
     # ---------------- CSV ----------------
@@ -110,8 +135,8 @@ def export_form_responses(
         iter([output.getvalue()]),
         media_type="text/csv",
         headers={
-    "Content-Disposition": (
-        f'attachment; filename="{filename}_responses.csv"'
-    )
-},
+            "Content-Disposition": (
+                f'attachment; filename="{filename}_responses.csv"'
+            )
+        },
     )

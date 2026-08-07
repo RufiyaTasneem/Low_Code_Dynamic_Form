@@ -1,3 +1,39 @@
+.forms-search-bar {
+    display: flex;
+    align-items: center;
+    position: relative;
+    max-width: 380px;
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 24px;
+}
+
+.forms-search-input {
+    width: 100%;
+    height: 42px;
+    padding-left: 40px;
+    padding-right: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.forms-search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.forms-search-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
 .forms-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -98,45 +134,35 @@
 }
 
 .form-actions {
-    display: flex;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
     margin-top: 18px;
-    flex-wrap: nowrap;
-    /* Keep everything in one row */
-    overflow-x: auto;
-    /* Prevent wrapping if screen is too small */
+    width: 100%;
 }
 
 .form-actions button {
-    width: 58px;
-    height: 58px;
-
-    flex-shrink: 0;
-
-    display: flex;
-    flex-direction: column;
+    width: 100%;
+    height: 40px;
+    display: inline-flex;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
-
-    gap: 4px;
-
+    gap: 6px;
     border: none;
-    border-radius: 12px;
-
+    border-radius: 10px;
     color: white;
-    font-size: 11px;
+    font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
-
-    transition: all .2s ease;
+    transition: all 0.2s ease;
+    padding: 0 8px;
+    white-space: nowrap;
 }
 
 .form-actions button:hover {
-    transform: translateY(-3px);
-}
-
-.form-actions button {
-    line-height: 1.2;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .edit-btn {
@@ -149,10 +175,6 @@
 
 .share-btn {
     background: var(--accent);
-}
-
-.publish-btn {
-    background: var(--success);
 }
 
 .empty-state {
@@ -198,4 +220,37 @@
 
 .duplicate-btn:hover {
     background: #4f46e5;
+}
+
+.delete-btn {
+    background: #ef4444;
+    color: white;
+}
+
+.delete-btn:hover {
+    background: #dc2626;
+}
+
+.delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.delete-modal-content {
+    background: var(--surface, #1e1e2d);
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+    border-radius: 16px;
+    padding: 28px;
+    width: 90%;
+    max-width: 440px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }

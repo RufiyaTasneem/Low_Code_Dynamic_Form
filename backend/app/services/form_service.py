@@ -1,4 +1,5 @@
 import copy
+import json
 import logging
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
@@ -6,9 +7,13 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from app.models.form import Form
 from app.models.field import Field
+from app.models.response import Response
 from app.models.response_value import ResponseValue
 from app.models.conditional_rule import ConditionalRule
+from app.models.form_link import FormLink
+from app.models.audit_log import AuditLog
 from app.services.field_type_service import get_field_types
+from app.services.audit_service import log_action
 from datetime import datetime
 from app.models.form_version import FormVersion
 
@@ -583,3 +588,70 @@ def update_retention_policy(
     db.refresh(form)
 
     return form
+
+
+def delete_form_service(
+    db: Session,
+    form_id: int,
+    user_id: int,
+):
+    form = (
+        db.query(Form)
+        .filter(Form.id == form_id, Form.owner_id == user_id)
+        .first()
+    )
+
+    if not form:
+        raise HTTPException(
+            status_code=404,
+            detail="Form not found or permission denied",
+        )
+
+    # Extract clean title string for audit log
+    title_raw = form.title
+    form_title = "Untitled Form"
+    if isinstance(title_raw, dict):
+        form_title = title_raw.get("en") or (list(title_raw.values())[0] if title_raw.values() else f"Form #{form_id}")
+    elif isinstance(title_raw, str):
+        try:
+            parsed = json.loads(title_raw)
+            if isinstance(parsed, dict):
+                form_title = parsed.get("en") or (list(parsed.values())[0] if parsed.values() else f"Form #{form_id}")
+            else:
+                form_title = title_raw
+        except Exception:
+            form_title = title_raw
+    else:
+        form_title = str(title_raw)
+
+    # Delete related response values and responses
+    responses = db.query(Response).filter(Response.form_id == form_id).all()
+    response_ids = [r.id for r in responses]
+    if response_ids:
+        db.query(ResponseValue).filter(ResponseValue.response_id.in_(response_ids)).delete(synchronize_session=False)
+        db.query(Response).filter(Response.form_id == form_id).delete(synchronize_session=False)
+
+    # Delete conditional rules
+    db.query(ConditionalRule).filter(ConditionalRule.form_id == form_id).delete(synchronize_session=False)
+
+    # Delete form links
+    db.query(FormLink).filter(FormLink.form_id == form_id).delete(synchronize_session=False)
+
+    # Decouple existing audit logs for this form so FK does not break
+    db.query(AuditLog).filter(AuditLog.form_id == form_id).update({"form_id": None}, synchronize_session=False)
+
+    # Delete the form (fields and form_versions will cascade delete)
+    db.delete(form)
+
+    # Record Audit Log for DELETE_FORM
+    log_action(
+        db=db,
+        user_id=user_id,
+        form_id=None,
+        action="DELETE_FORM",
+        details=f'Deleted form "{form_title}"',
+    )
+
+    db.commit()
+
+    return {"message": "Form deleted successfully", "form_id": form_id}

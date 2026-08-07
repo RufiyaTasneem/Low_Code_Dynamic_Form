@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../services/api";
 import FieldCard from "./FieldCard";
 
 function FieldPalette({ onSelect }) {
+    const { t } = useTranslation();
     const [fields, setFields] = useState([]);
 
     useEffect(() => {
@@ -18,10 +20,10 @@ function FieldPalette({ onSelect }) {
 
     return (
         <div>
-            <h2>Field Types</h2>
+            <h2>{t("Field Types")}</h2>
 
             {fields.length === 0 ? (
-                <p>No field types available.</p>
+                <p>{t("Loading...")}</p>
             ) : (
                 fields.map((field) => (
                     <FieldCard

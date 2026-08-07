@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     createConditionalRuleApi,
     deleteConditionalRuleApi,
@@ -20,6 +21,7 @@ function ConditionalRuleBuilder({
     fetchRules,
     selectedLanguage = "en",
 }) {
+    const { t } = useTranslation();
     const [triggerFieldId, setTriggerFieldId] = useState("");
     const [operator, setOperator] = useState("equals");
     const [value, setValue] = useState("");
@@ -27,11 +29,7 @@ function ConditionalRuleBuilder({
     const [action, setAction] = useState("show");
 
     const addRule = async () => {
-        if (
-            !triggerFieldId ||
-            !targetFieldId ||
-            !value
-        ) {
+        if (!triggerFieldId || !targetFieldId || !value) {
             alert("Please complete all fields.");
             return;
         }
@@ -74,91 +72,63 @@ function ConditionalRuleBuilder({
 
     return (
         <div className="config-card">
-            <h3>⚡ Conditional Rules</h3>
+            <h3>⚡ {t("Conditional Logic")}</h3>
 
-            <label>Trigger Field</label>
-
+            <label>{t("Trigger Field")}</label>
             <select
                 value={triggerFieldId}
-                onChange={(e) =>
-                    setTriggerFieldId(e.target.value)
-                }
+                onChange={(e) => setTriggerFieldId(e.target.value)}
             >
                 <option value="">Select Field</option>
-
                 {fields.map((field) => (
-                    <option
-                        key={field.id}
-                        value={field.id}
-                    >
+                    <option key={field.id} value={field.id}>
                         {resolveFieldLabel(field, selectedLanguage)}
                     </option>
                 ))}
             </select>
 
-            <label>Operator</label>
-
+            <label>{t("Operator")}</label>
             <select
                 value={operator}
-                onChange={(e) =>
-                    setOperator(e.target.value)
-                }
+                onChange={(e) => setOperator(e.target.value)}
             >
-                <option value="equals">Equals</option>
-                <option value="not_equals">Not Equals</option>
-                <option value="contains">Contains</option>
-                <option value="greater_than">Greater Than</option>
-                <option value="is_empty">Is Empty</option>
+                <option value="equals">{t("Equals")}</option>
+                <option value="not_equals">{t("Not Equals")}</option>
+                <option value="contains">{t("Contains")}</option>
             </select>
 
-            <label>Value</label>
-
+            <label>{t("Value")}</label>
             <input
                 value={value}
-                onChange={(e) =>
-                    setValue(e.target.value)
-                }
+                onChange={(e) => setValue(e.target.value)}
                 placeholder="Comparison Value"
             />
 
-            <label>Action</label>
-
+            <label>{t("Action")}</label>
             <select
                 value={action}
-                onChange={(e) =>
-                    setAction(e.target.value)
-                }
+                onChange={(e) => setAction(e.target.value)}
             >
-                <option value="show">Show</option>
-                <option value="hide">Hide</option>
-                <option value="require">Require</option>
+                <option value="show">{t("Show")}</option>
+                <option value="hide">{t("Hide")}</option>
+                <option value="require">{t("Require")}</option>
             </select>
 
-            <label>Target Field</label>
-
+            <label>{t("Target Field")}</label>
             <select
                 value={targetFieldId}
-                onChange={(e) =>
-                    setTargetFieldId(e.target.value)
-                }
+                onChange={(e) => setTargetFieldId(e.target.value)}
             >
                 <option value="">Select Field</option>
-
                 {fields.map((field) => (
-                    <option
-                        key={field.id}
-                        value={field.id}
-                    >
+                    <option key={field.id} value={field.id}>
                         {resolveFieldLabel(field, selectedLanguage)}
                     </option>
                 ))}
             </select>
 
-            <button
-                className="primary-btn"
-                onClick={addRule}
-            >
-                Add Rule
+            <button className="primary-btn" onClick={addRule}>
+                {t("Add Rule")}
             </button>
 
             <hr />
@@ -169,38 +139,23 @@ function ConditionalRuleBuilder({
                 <p>No rules yet.</p>
             ) : (
                 rules.map((rule) => {
-                    const trigger = fields.find(
-                        (f) => f.id === rule.trigger_field_id
-                    );
-
-                    const target = fields.find(
-                        (f) => f.id === rule.target_field_id
-                    );
+                    const trigger = fields.find((f) => f.id === rule.trigger_field_id);
+                    const target = fields.find((f) => f.id === rule.target_field_id);
 
                     return (
-                        <div
-                            className="rule-card"
-                            key={rule.id}
-                        >
+                        <div className="rule-card" key={rule.id}>
                             <strong>
                                 IF {resolveFieldLabel(trigger, selectedLanguage)}
                             </strong>
-
                             <div>
                                 {rule.operator} "{rule.value}"
                             </div>
-
                             <div>
                                 THEN {rule.action.toUpperCase()}{" "}
                                 {resolveFieldLabel(target, selectedLanguage)}
                             </div>
-
-                            <button
-                                onClick={() =>
-                                    deleteRule(rule.id)
-                                }
-                            >
-                                Delete
+                            <button onClick={() => deleteRule(rule.id)}>
+                                {t("Delete")}
                             </button>
                         </div>
                     );

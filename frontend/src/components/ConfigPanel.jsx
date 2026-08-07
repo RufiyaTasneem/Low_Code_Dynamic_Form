@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { resolveText } from "../utils/translationUtils";
 
 const normalizeOptions = (options) => {
@@ -245,10 +246,10 @@ function ConfigPanel({
 
             {/* Field Label Input */}
             <div className="form-group">
-                <label>Field Label</label>
+                <label>{t("Label")}</label>
                 <input
                     type="text"
-                    placeholder="Enter field label"
+                    placeholder={t("Enter field label")}
                     value={labelData.en || ""}
                     disabled={isLocked}
                     onChange={(e) => {
@@ -261,19 +262,19 @@ function ConfigPanel({
             {(fieldDefinition.config || []).map((item) => (
                 <div className="form-group" key={item.name}>
                     {item.name !== "placeholder" && item.name !== "help_text" && item.name !== "validation_message" && item.name !== "options" && (
-                        <label>{item.label}</label>
+                        <label>{t(item.label)}</label>
                     )}
-                    {item.name === "placeholder" && <label>Placeholder</label>}
-                    {item.name === "help_text" && <label>Help Text</label>}
-                    {item.name === "validation_message" && <label>Validation Message</label>}
-                    {item.name === "options" && <label>Option Labels (one per line)</label>}
+                    {item.name === "placeholder" && <label>{t("Placeholder")}</label>}
+                    {item.name === "help_text" && <label>{t("Help Text")}</label>}
+                    {item.name === "validation_message" && <label>{t("Validation Message")}</label>}
+                    {item.name === "options" && <label>{t("Option Labels (one per line)")}</label>}
                     {renderConfigInput(item)}
                 </div>
             ))}
 
             {!hasValidationMsgInConfig && (
                 <div className="form-group">
-                    <label>Validation Message (Optional)</label>
+                    <label>{t("Validation Message")}</label>
                     <input
                         type="text"
                         placeholder="e.g. This field is required"
@@ -300,7 +301,7 @@ function ConfigPanel({
                 style={{ marginTop: 20, width: "100%" }}
                 disabled={isLocked}
             >
-                {editingField ? "Update Field" : "Add Field"}
+                {editingField ? t("Save Changes") : t("Create Form")}
             </button>
         </div>
     );

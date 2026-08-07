@@ -23,6 +23,8 @@ export const generateShareableLinkApi = (formId) =>
     API.post(`/forms/${formId}/generate-link`);
 export const duplicateFormApi = (formId) =>
     API.post(`/forms/${formId}/duplicate`);
+export const deleteFormApi = (formId) =>
+    API.delete(`/forms/${formId}`);
 export const getPublicFormApi = (token) =>
     API.get(`/public/forms/${token}`);
 

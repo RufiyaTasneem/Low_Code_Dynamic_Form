@@ -1,27 +1,33 @@
+import { useTranslation } from "react-i18next";
 import "./Footer.css";
 
 const columns = [
     {
-        title: "Product",
-        links: ["Features", "Templates", "Pricing", "Integrations"],
+        titleKey: "Product",
+        links: [
+            { key: "Features", href: "#features" },
+            { key: "Templates", href: "#templates" },
+            { key: "Pricing", href: "#pricing" },
+        ],
     },
     {
-        title: "Resources",
-        links: ["Docs", "Guides", "Support", "Status"],
-    },
-    {
-        title: "Company",
-        links: ["About", "Careers", "Contact", "Blog"],
+        titleKey: "Company",
+        links: [
+            { key: "About", href: "#about" },
+            { key: "Contact", href: "#contact" },
+        ],
     },
 ];
 
 export default function Footer() {
+    const { t } = useTranslation();
+
     return (
         <footer id="contact" className="landing-footer">
             <div className="footer-grid">
                 <div className="footer-brand">
                     <h3>LowCode Form Builder</h3>
-                    <p>Modern forms, dynamic logic, and insight-driven experiences for modern teams.</p>
+                    <p>{t("Modern forms, dynamic logic, and insight-driven experiences for modern teams.")}</p>
                     <div className="social-links">
                         <a href="#" aria-label="Twitter">𝕏</a>
                         <a href="#" aria-label="LinkedIn">in</a>
@@ -31,22 +37,22 @@ export default function Footer() {
                 </div>
 
                 {columns.map((column) => (
-                    <div key={column.title} className="footer-column">
-                        <h4>{column.title}</h4>
+                    <div key={column.titleKey} className="footer-column">
+                        <h4>{t(column.titleKey)}</h4>
                         <ul>
                             {column.links.map((link) => (
-                                <li key={link}><a href="#">{link}</a></li>
+                                <li key={link.key}><a href={link.href}>{t(link.key)}</a></li>
                             ))}
                         </ul>
                     </div>
                 ))}
 
                 <div className="footer-newsletter">
-                    <h4>Newsletter</h4>
-                    <p>Get product updates and launch tips every month.</p>
-                    <form className="newsletter-form">
-                        <input type="email" placeholder="Email address" />
-                        <button type="submit">Join</button>
+                    <h4>{t("Newsletter")}</h4>
+                    <p>{t("Get product updates and launch tips every month.")}</p>
+                    <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
+                        <input type="email" placeholder={t("Email address")} />
+                        <button type="submit">{t("Join")}</button>
                     </form>
                 </div>
             </div>

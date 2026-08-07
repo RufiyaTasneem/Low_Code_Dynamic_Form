@@ -1,62 +1,80 @@
-export const getTranslatedText = (text, selectedLanguage = "en") => {
+import { translations } from "../constants/translations";
+
+export const translate = (text, language = "en") => {
     if (text === undefined || text === null) return "";
-    return resolveText(text, selectedLanguage);
+
+    let key = text;
+
+    // Handle multilingual object e.g. { en: "Email", te: "ఇమెయిల్" }
+    if (typeof text === "object" && text !== null) {
+        if (text[language] && String(text[language]).trim() !== "") {
+            return String(text[language]);
+        }
+        if (text.en && String(text.en).trim() !== "") {
+            key = text.en;
+        } else {
+            const firstKey = Object.keys(text)[0];
+            if (firstKey && text[firstKey]) return String(text[firstKey]);
+            return "";
+        }
+    } else if (typeof text === "string") {
+        const trimmed = text.trim();
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            try {
+                const parsed = JSON.parse(text);
+                if (typeof parsed === "object" && parsed !== null) {
+                    if (parsed[language] && String(parsed[language]).trim() !== "") {
+                        return String(parsed[language]);
+                    }
+                    if (parsed.en && String(parsed.en).trim() !== "") {
+                        key = parsed.en;
+                    }
+                }
+            } catch (e) {
+                // Keep key as string
+            }
+        }
+    }
+
+    const strKey = String(key ?? "").trim();
+    if (!strKey) return "";
+
+    // 1. Look up in dictionary for target language
+    const langDict = translations[language] || {};
+    if (langDict[strKey] !== undefined && langDict[strKey] !== null) {
+        return langDict[strKey];
+    }
+
+    // 2. Look up in English dictionary
+    const enDict = translations.en || {};
+    if (enDict[strKey] !== undefined && enDict[strKey] !== null) {
+        return enDict[strKey];
+    }
+
+    // 3. Return original text fallback
+    return String(key);
+};
+
+export const getTranslatedText = (text, selectedLanguage = "en") => {
+    return translate(text, selectedLanguage);
 };
 
 export const resolveText = (value, language = "en") => {
-    if (value === undefined || value === null) return "";
-
-    let obj = value;
-
-    if (typeof value === "string") {
-        const trimmed = (value ?? "").trim();
-        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-            try {
-                obj = JSON.parse(value);
-            } catch (e) {
-                return value;
-            }
-        } else {
-            return value;
-        }
-    }
-
-    if (typeof obj === "object" && obj !== null) {
-        // 1. Target language
-        const targetVal = obj[language];
-        if (targetVal !== undefined && targetVal !== null && String(targetVal).trim() !== "") {
-            return String(targetVal);
-        }
-        // 2. Fall back to English ("en")
-        const enVal = obj.en;
-        if (enVal !== undefined && enVal !== null && String(enVal).trim() !== "") {
-            return String(enVal);
-        }
-        // 3. Fall back to first available non-empty translation
-        for (const key of Object.keys(obj)) {
-            const val = obj[key];
-            if (val !== undefined && val !== null && String(val).trim() !== "") {
-                return String(val);
-            }
-        }
-        return "";
-    }
-
-    return String(value ?? "");
+    return translate(value, language);
 };
 
 export const resolveFieldLabel = (field, language = "en") => {
     if (!field) return "";
-    const resolved = resolveText(field?.label, language);
+    const resolved = translate(field?.label, language);
     return resolved || (field.id ? `Field ${field.id}` : "");
 };
 
 export const resolvePlaceholder = (placeholder, language = "en") => {
-    return resolveText(placeholder, language);
+    return translate(placeholder, language);
 };
 
 export const resolveHelpText = (helpText, language = "en") => {
-    return resolveText(helpText, language);
+    return translate(helpText, language);
 };
 
 export const resolveOptionLabel = (opt, language = "en") => {
@@ -66,20 +84,20 @@ export const resolveOptionLabel = (opt, language = "en") => {
         if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
             try {
                 const parsed = JSON.parse(opt);
-                return resolveText(parsed, language);
+                return translate(parsed, language);
             } catch (e) {
-                return opt;
+                return translate(opt, language);
             }
         }
-        return opt;
+        return translate(opt, language);
     }
 
     if (typeof opt === "object" && opt !== null) {
         if (opt.label) {
-            const resolved = resolveText(opt.label, language);
+            const resolved = translate(opt.label, language);
             if (resolved) return resolved;
         }
-        const textFromObj = resolveText(opt, language);
+        const textFromObj = translate(opt, language);
         if (textFromObj) return textFromObj;
         return opt.value ?? "";
     }

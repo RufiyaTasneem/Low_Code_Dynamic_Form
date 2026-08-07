@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "../app.css";
 import API from "../services/api";
 import {
@@ -364,6 +365,7 @@ const parseMultilingualText = (value) => {
 };
 
 export default function Builder() {
+    const { t } = useTranslation();
     const [searchParams] = useSearchParams();
     const [retentionDays, setRetentionDays] = useState(30);
     const urlFormId = searchParams.get("id");
@@ -947,49 +949,49 @@ export default function Builder() {
                     <div className="header-top">
                         <div>
                             <p className="eyebrow">Low-Code Builder</p>
-                            <h1>Create New Form</h1>
-                            <p className="header-copy">Design forms, manage versions, and publish with confidence.</p>
+                            <h1>{t("Create New Form")}</h1>
+                            <p className="header-copy">{t("Design forms, manage versions, and publish with confidence.")}</p>
                         </div>
                         <div className="header-actions">
                             <button className="primary-btn" onClick={() => setPreviewMode(!previewMode)}>
-                                {previewMode ? "Back to Builder" : "Preview Form"}
+                                {previewMode ? t("Back to Builder") : t("Preview Form")}
                             </button>
                             <button className="primary-btn" onClick={publishCurrentForm} disabled={!formId}>
-                                Publish
+                                {t("Publish")}
                             </button>
                             <button className="primary-btn" onClick={archiveCurrentForm} disabled={!formId}>
-                                Archive
+                                {t("Archive")}
                             </button>
                             <button className="primary-btn" onClick={generateShareLink} disabled={!formId || isGeneratingShare}>
-                                {isGeneratingShare ? "Generating..." : (shareUrl ? "Shareable Link" : "Get Shareable Link")}
+                                {isGeneratingShare ? t("Generating...") : (shareUrl ? t("Shareable Link") : t("Get Shareable Link"))}
                             </button>
                             <button className="primary-btn" onClick={createForm} disabled={formId !== null}>
-                                {formId ? "Form Created" : "Create Form"}
+                                {formId ? t("Form Created") : t("Create Form")}
                             </button>
                         </div>
                     </div>
 
                     <div className="form-grid">
                         <div className="form-group">
-                            <label>Form Title</label>
+                            <label>{t("Form Title")}</label>
                             <input
                                 type="text"
                                 value={titleData.en || ""}
                                 onChange={(e) =>
                                     setTitleData((prev) => ({ ...prev, en: e.target.value }))
                                 }
-                                placeholder="Enter form title"
+                                placeholder={t("Enter form title")}
                             />
                         </div>
 
                         <div className="form-group">
-                            <label>Description</label>
+                            <label>{t("Description")}</label>
                             <textarea
                                 value={descriptionData.en || ""}
                                 onChange={(e) =>
                                     setDescriptionData((prev) => ({ ...prev, en: e.target.value }))
                                 }
-                                placeholder="Enter description"
+                                placeholder={t("Enter description")}
                             />
                         </div>
                     </div>
@@ -1080,13 +1082,13 @@ export default function Builder() {
                 <section className="retention-card">
                     <div className="retention-header">
                         <div>
-                            <p className="eyebrow">Data Retention</p>
-                            <h2>Retention Policy</h2>
+                            <p className="eyebrow">{t("Retention Policy")}</p>
+                            <h2>{t("Retention Policy")}</h2>
                         </div>
                     </div>
 
                     <div className="retention-body">
-                        <label>Automatically archive responses after</label>
+                        <label>{t("Automatically archive responses after")}</label>
 
                         <input
                             type="number"
@@ -1097,10 +1099,10 @@ export default function Builder() {
                             }
                         />
 
-                        <span>days</span>
+                        <span>{t("days")}</span>
 
                         <button onClick={saveRetentionPolicy}>
-                            Save Policy
+                            {t("Save Policy")}
                         </button>
                     </div>
                 </section>

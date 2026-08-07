@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { exportCSVApi, exportJSONApi } from "../../api/exportApi";
 import "./ExportDropdown.css";
 
 export default function ExportDropdown({ formId }) {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -23,10 +25,7 @@ export default function ExportDropdown({ formId }) {
             });
 
             const url = window.URL.createObjectURL(blob);
-
             const link = document.createElement("a");
-            console.log("Headers:", res.headers);
-            console.log("Content-Disposition:", res.headers["content-disposition"]);
             const disposition = res.headers["content-disposition"];
 
             let filename = `form_${formId}.${type}`;
@@ -40,60 +39,45 @@ export default function ExportDropdown({ formId }) {
 
             link.href = url;
             link.download = filename;
-
             document.body.appendChild(link);
-
             link.click();
-
             document.body.removeChild(link);
-
             window.URL.revokeObjectURL(url);
-
             alert(`${type.toUpperCase()} exported successfully!`);
-
         } catch (err) {
-
             console.error(err);
-
             alert("Export failed.");
-
         } finally {
-
             setLoading(false);
-
             setOpen(false);
-
         }
     };
 
     return (
         <div className="export-dropdown">
-
             <button
                 className="export-btn"
                 onClick={() => setOpen(!open)}
                 disabled={loading}
             >
-                {loading ? "⏳ Downloading..." : "⬇ Export"}
+                {loading ? `⏳ ${t("Downloading...")}` : `⬇ ${t("Export")}`}
             </button>
 
             {open && (
                 <div className="dropdown-menu">
-
                     <button
                         disabled={loading}
                         onClick={() => downloadFile("csv")}
                     >
-                        📄 Export as CSV
+                        📄 {t("Export CSV")}
                     </button>
 
                     <button
                         disabled={loading}
                         onClick={() => downloadFile("json")}
                     >
-                        🗂 Export as JSON
+                        🗂 {t("Export JSON")}
                     </button>
-
                 </div>
             )}
         </div>

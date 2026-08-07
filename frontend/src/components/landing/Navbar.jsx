@@ -1,19 +1,21 @@
 import { useState } from "react";
 import { Menu, X, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import ThemeToggle from "../ThemeToggle.jsx";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../LanguageSwitcher";
 import "./Navbar.css";
 
 const navLinks = [
-    { label: "Features", href: "#features" },
-    { label: "How It Works", href: "#workflow" },
-    { label: "Templates", href: "#templates" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "About", href: "#about" },
-    { label: "Contact", href: "#contact" },
+    { key: "Features", href: "#features" },
+    { key: "How It Works", href: "#workflow" },
+    { key: "Templates", href: "#templates" },
+    { key: "Pricing", href: "#pricing" },
+    { key: "About", href: "#about" },
+    { key: "Contact", href: "#contact" },
 ];
 
 export default function Navbar() {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -28,21 +30,21 @@ export default function Navbar() {
 
                 <nav className="nav-links">
                     {navLinks.map((link) => (
-                        <a key={link.label} href={link.href}>
-                            {link.label}
+                        <a key={link.key} href={link.href}>
+                            {t(link.key)}
                         </a>
                     ))}
                 </nav>
 
                 <div className="nav-actions">
-                    <ThemeToggle />
+                    <LanguageSwitcher />
 
                     <Link to="/login" className="nav-link-button">
-                        Sign In
+                        {t("Sign In")}
                     </Link>
 
                     <Link to="/register" className="nav-cta">
-                        Get Started Free
+                        {t("Get Started Free")}
                     </Link>
                 </div>
 
@@ -58,11 +60,11 @@ export default function Navbar() {
                 <div className="mobile-nav">
                     {navLinks.map((link) => (
                         <a
-                            key={link.label}
+                            key={link.key}
                             href={link.href}
                             onClick={() => setIsOpen(false)}
                         >
-                            {link.label}
+                            {t(link.key)}
                         </a>
                     ))}
                 </div>
