@@ -661,11 +661,7 @@ export default function Builder() {
             dateStyle: "medium",
             timeStyle: "short",
         });
-    };
-
-    const addField = async (fieldData) => {
-        console.log("addField start", { formId, selectedVersion, isLocked, fieldData });
-
+    };    const addField = async (fieldOrType, maybeLabel, maybeConfig) => {
         if (!formId) {
             alert("Please create a form first!");
             return;
@@ -676,45 +672,95 @@ export default function Builder() {
             return;
         }
 
-        if (!fieldData || !fieldData.type || !fieldData.label) {
-            console.error("Invalid fieldData", fieldData);
+        let rawType = "";
+        let rawLabel = null;
+        let rawConfig = {};
+
+        if (typeof fieldOrType === "object" && fieldOrType !== null) {
+            if (maybeLabel !== undefined) {
+                rawType = fieldOrType.type;
+                rawLabel = maybeLabel;
+                rawConfig = maybeConfig || {};
+            } else {
+                rawType = fieldOrType.type;
+                rawLabel = fieldOrType.label;
+                rawConfig = fieldOrType.config || {};
+            }
+        } else if (typeof fieldOrType === "string") {
+            rawType = fieldOrType;
+            rawLabel = maybeLabel;
+            rawConfig = maybeConfig || {};
+        }
+
+        if (!rawType || !rawLabel) {
             alert("Field data is invalid. Please select a field type and enter a label.");
             return;
         }
 
+        const labelObj = typeof rawLabel === "object" && rawLabel !== null
+            ? { en: "", ...rawLabel }
+            : { en: String(rawLabel ?? "") };
+
+        const formattedConfig = {};
+        if (rawConfig && typeof rawConfig === "object" && !Array.isArray(rawConfig)) {
+            for (const [key, val] of Object.entries(rawConfig)) {
+                if (key === "placeholder" || key === "help_text" || key === "validation_message") {
+                    formattedConfig[key] = typeof val === "object" && val !== null
+                        ? { en: "", ...val }
+                        : { en: String(val ?? "") };
+                } else if (key === "options" && Array.isArray(val)) {
+                    formattedConfig[key] = val.map((opt) => {
+                        if (typeof opt === "string") {
+                            return { value: opt, label: { en: opt } };
+                        }
+                        if (typeof opt === "object" && opt !== null) {
+                            const optVal = opt.value || opt.label?.en || opt.en || "";
+                            let optLabelObj = {};
+                            if (opt.label && typeof opt.label === "object") {
+                                optLabelObj = { en: "", ...opt.label };
+                            } else if (typeof opt.label === "string") {
+                                optLabelObj = { en: opt.label };
+                            } else {
+                                optLabelObj = { en: optVal };
+                            }
+                            return { value: optVal, label: optLabelObj };
+                        }
+                        return { value: String(opt), label: { en: String(opt) } };
+                    });
+                } else {
+                    formattedConfig[key] = val;
+                }
+            }
+        }
+
         const payload = {
-            field_order: fieldData.field_order || fields.length + 1,
-            ...fieldData,
+            field_order: fields.length + 1,
+            type: rawType,
+            label: labelObj,
+            config: formattedConfig,
         };
 
         try {
-            console.log("POST /forms/" + formId + "/fields", payload);
+            console.log("POST /forms/" + formId + "/fields payload:", payload);
             const response = await API.post(`/forms/${formId}/fields`, payload);
-            console.log("Field added response", response.data);
+            console.log("Field added response:", response.data);
 
             await fetchForm(formId);
             await fetchVersions(formId);
             await fetchRules(formId);
+            setSelectedField(null);
+            setEditingField(null);
             alert("Field added successfully!");
         } catch (error) {
             console.error("Full Error:", error);
-
             let message = "Failed to add field.";
-
-            if (error.response) {
-                console.log("Status:", error.response.status);
-                console.log("Response:", error.response.data);
-                if (error.response.data?.detail) {
+            if (error.response?.data?.detail) {
+                if (typeof error.response.data.detail === "string") {
                     message = `Failed to add field: ${error.response.data.detail}`;
                 } else {
-                    message = `Failed to add field: ${JSON.stringify(error.response.data)}`;
+                    message = `Failed to add field: ${JSON.stringify(error.response.data.detail)}`;
                 }
-            } else if (error.request) {
-                console.log("Request:", error.request);
-            } else {
-                console.log("Message:", error.message);
             }
-
             alert(message);
         }
     };
@@ -748,16 +794,72 @@ export default function Builder() {
         }
     };
 
-    const updateField = async (updatedField) => {
+    const updateField = async (updatedField, maybeLabel, maybeConfig) => {
         if (isLocked) {
             alert("A draft version must be selected to update fields.");
             return;
         }
 
+        let fieldId = null;
+        let rawLabel = null;
+        let rawConfig = {};
+
+        if (typeof updatedField === "object" && updatedField !== null) {
+            if (maybeLabel !== undefined) {
+                fieldId = updatedField.id || updatedField;
+                rawLabel = maybeLabel;
+                rawConfig = maybeConfig || {};
+            } else {
+                fieldId = updatedField.id;
+                rawLabel = updatedField.label;
+                rawConfig = updatedField.config || {};
+            }
+        } else {
+            fieldId = updatedField;
+            rawLabel = maybeLabel;
+            rawConfig = maybeConfig || {};
+        }
+
+        const labelObj = typeof rawLabel === "object" && rawLabel !== null
+            ? { en: "", ...rawLabel }
+            : { en: String(rawLabel ?? "") };
+
+        const formattedConfig = {};
+        if (rawConfig && typeof rawConfig === "object" && !Array.isArray(rawConfig)) {
+            for (const [key, val] of Object.entries(rawConfig)) {
+                if (key === "placeholder" || key === "help_text" || key === "validation_message") {
+                    formattedConfig[key] = typeof val === "object" && val !== null
+                        ? { en: "", ...val }
+                        : { en: String(val ?? "") };
+                } else if (key === "options" && Array.isArray(val)) {
+                    formattedConfig[key] = val.map((opt) => {
+                        if (typeof opt === "string") {
+                            return { value: opt, label: { en: opt } };
+                        }
+                        if (typeof opt === "object" && opt !== null) {
+                            const optVal = opt.value || opt.label?.en || opt.en || "";
+                            let optLabelObj = {};
+                            if (opt.label && typeof opt.label === "object") {
+                                optLabelObj = { en: "", ...opt.label };
+                            } else if (typeof opt.label === "string") {
+                                optLabelObj = { en: opt.label };
+                            } else {
+                                optLabelObj = { en: optVal };
+                            }
+                            return { value: optVal, label: optLabelObj };
+                        }
+                        return { value: String(opt), label: { en: String(opt) } };
+                    });
+                } else {
+                    formattedConfig[key] = val;
+                }
+            }
+        }
+
         try {
-            await API.patch(`/forms/${formId}/fields/${updatedField.id}`, {
-                label: updatedField.label,
-                config: updatedField.config,
+            await API.patch(`/forms/${formId}/fields/${fieldId}`, {
+                label: labelObj,
+                config: formattedConfig,
             });
 
             await fetchForm(formId);
@@ -849,13 +951,6 @@ export default function Builder() {
                             <p className="header-copy">Design forms, manage versions, and publish with confidence.</p>
                         </div>
                         <div className="header-actions">
-                            <label className="lang-select-label">
-                                Language
-                                <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)}>
-                                    <option value="en">English (en)</option>
-                                    <option value="te">Telugu (te)</option>
-                                </select>
-                            </label>
                             <button className="primary-btn" onClick={() => setPreviewMode(!previewMode)}>
                                 {previewMode ? "Back to Builder" : "Preview Form"}
                             </button>
@@ -876,48 +971,25 @@ export default function Builder() {
 
                     <div className="form-grid">
                         <div className="form-group">
-                            <label>English Form Title</label>
+                            <label>Form Title</label>
                             <input
                                 type="text"
-                                value={titleData.en}
+                                value={titleData.en || ""}
                                 onChange={(e) =>
                                     setTitleData((prev) => ({ ...prev, en: e.target.value }))
                                 }
-                                placeholder="Enter English form title"
+                                placeholder="Enter form title"
                             />
                         </div>
 
                         <div className="form-group">
-                            <label>Telugu Form Title</label>
-                            <input
-                                type="text"
-                                value={titleData.te}
-                                onChange={(e) =>
-                                    setTitleData((prev) => ({ ...prev, te: e.target.value }))
-                                }
-                                placeholder="Enter Telugu form title"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>English Description</label>
+                            <label>Description</label>
                             <textarea
-                                value={descriptionData.en}
+                                value={descriptionData.en || ""}
                                 onChange={(e) =>
                                     setDescriptionData((prev) => ({ ...prev, en: e.target.value }))
                                 }
-                                placeholder="Enter English description"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Telugu Description</label>
-                            <textarea
-                                value={descriptionData.te}
-                                onChange={(e) =>
-                                    setDescriptionData((prev) => ({ ...prev, te: e.target.value }))
-                                }
-                                placeholder="Enter Telugu description"
+                                placeholder="Enter description"
                             />
                         </div>
                     </div>

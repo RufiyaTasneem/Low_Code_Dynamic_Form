@@ -1,62 +1,47 @@
-import { useState, useEffect } from "react";
-
-const defaultLabelValue = { en: "", te: "" };
+import React, { useState, useEffect } from "react";
+import { resolveText } from "../utils/translationUtils";
 
 const normalizeOptions = (options) => {
     if (!options) return [];
     let list = options;
     if (typeof list === "string") {
-        list = list.split(/[,\n]+/).map((s) => s.trim()).filter(Boolean);
+        list = list.split(/[,\n]+/).map((s) => (s ?? "").trim()).filter(Boolean);
     }
     if (!Array.isArray(list)) return [];
 
     return list.map((opt) => {
-        if (!opt) return { value: "", label: { en: "", te: "" } };
+        if (!opt) return { value: "", label: { en: "" } };
 
         if (typeof opt === "string") {
             try {
                 const parsed = JSON.parse(opt);
                 if (typeof parsed === "object" && parsed !== null && (parsed.value || parsed.label || parsed.en)) {
                     const val = parsed.value || parsed.label?.en || parsed.en || "";
-                    const enLabel = (parsed.label && typeof parsed.label === "object")
-                        ? (parsed.label.en || val)
-                        : (typeof parsed.label === "string" ? parsed.label : (parsed.en || val));
-                    const teLabel = (parsed.label && typeof parsed.label === "object")
-                        ? (parsed.label.te || enLabel)
-                        : (parsed.te || enLabel);
-                    return {
-                        value: val,
-                        label: { en: enLabel, te: teLabel }
-                    };
+                    const labelObj = (parsed.label && typeof parsed.label === "object")
+                        ? { ...parsed.label }
+                        : { en: typeof parsed.label === "string" ? parsed.label : (parsed.en || val) };
+                    return { value: val, label: labelObj };
                 }
             } catch (e) {
                 // Plain string
             }
-            return {
-                value: opt,
-                label: { en: opt, te: opt }
-            };
+            return { value: opt, label: { en: opt } };
         }
 
         if (typeof opt === "object" && opt !== null) {
-            const val = opt.value || opt.label?.en || opt.en || opt.te || "";
-            const enLabel = (opt.label && typeof opt.label === "object")
-                ? (opt.label.en || val)
-                : (typeof opt.label === "string" ? opt.label : (opt.en || val));
-            const teLabel = (opt.label && typeof opt.label === "object")
-                ? (opt.label.te || enLabel)
-                : (opt.te || enLabel);
-
-            return {
-                value: val,
-                label: { en: enLabel, te: teLabel }
-            };
+            const val = opt.value || opt.label?.en || opt.en || "";
+            let labelObj = {};
+            if (opt.label && typeof opt.label === "object") {
+                labelObj = { ...opt.label };
+            } else if (typeof opt.label === "string") {
+                labelObj = { en: opt.label };
+            } else {
+                labelObj = { en: val };
+            }
+            return { value: val, label: labelObj };
         }
 
-        return {
-            value: String(opt),
-            label: { en: String(opt), te: String(opt) }
-        };
+        return { value: String(opt), label: { en: String(opt) } };
     });
 };
 
@@ -69,38 +54,19 @@ function ConfigPanel({
     isLocked,
     selectedLanguage,
 }) {
-    const [labelData, setLabelData] = useState(defaultLabelValue);
+    const [labelData, setLabelData] = useState({ en: "", te: "" });
     const [config, setConfig] = useState({});
-
-    const normalizeLabelValue = (value) => {
-        if (!value) {
-            return { ...defaultLabelValue };
-        }
-
-        if (typeof value === "string") {
-            return { en: value, te: "" };
-        }
-
-        return {
-            en: value?.en || "",
-            te: value?.te || "",
-        };
-    };
-
-    const resolveLabel = (value, language = selectedLanguage) => {
-        if (typeof value === "string") {
-            return value;
-        }
-
-        return value?.[language] || value?.en || "";
-    };
 
     useEffect(() => {
         if (editingField) {
-            setLabelData(normalizeLabelValue(editingField.label));
+            const l = editingField.label;
+            const lObj = typeof l === "object" && l !== null ? l : { en: typeof l === "string" ? l : "", te: "" };
+            setLabelData({ en: lObj.en || "", te: lObj.te || lObj.en || "" });
             setConfig(editingField.config || {});
         } else {
-            setLabelData(normalizeLabelValue(selectedField?.label));
+            const l = selectedField?.label;
+            const lObj = typeof l === "object" && l !== null ? l : { en: typeof l === "string" ? l : "", te: "" };
+            setLabelData({ en: lObj.en || "", te: lObj.te || lObj.en || "" });
             setConfig({});
         }
     }, [editingField, selectedField]);
@@ -120,9 +86,9 @@ function ConfigPanel({
             return [];
         }
 
-        return String(value)
+        return String(value ?? "")
             .split(/[,\n]+/)
-            .map((item) => item.trim())
+            .map((item) => (item ?? "").trim())
             .filter(Boolean);
     };
 
@@ -130,7 +96,6 @@ function ConfigPanel({
         if (Array.isArray(value)) {
             return value.join("\n");
         }
-
         return value ?? "";
     };
 
@@ -141,66 +106,49 @@ function ConfigPanel({
             .filter((item) => item.type === "list")
             .forEach((item) => {
                 if (item.name === "options") {
-                    normalized[item.name] = normalizeOptions(normalized[item.name]);
-                } else {
-                    normalized[item.name] = parseListValues(normalized[item.name]);
+                    return;
                 }
+                const rawValue = normalized[item.name];
+                normalized[item.name] = parseListValues(rawValue);
             });
 
         return normalized;
     };
 
-    const handleChange = (name, value, type) => {
-        setConfig((prev) => {
-            const nextConfig = { ...prev };
+    const handleChange = (key, value, type) => {
+        let updatedValue = value;
 
-            if (type === "boolean") {
-                nextConfig[name] = Boolean(value);
-            } else if (type === "list") {
-                nextConfig[name] = value;
-            } else {
-                nextConfig[name] = value;
-            }
+        if (type === "number") {
+            updatedValue = value === "" ? "" : Number(value);
+        } else if (type === "boolean") {
+            updatedValue = Boolean(value);
+        }
 
-            return nextConfig;
-        });
-    };
-
-    const handleAdd = () => {
-        if (isLocked) return;
-
-        const normalizedConfig = normalizeConfig(config);
-
-        const fieldData = {
-            label: {
-                en: labelData.en || "",
-                te: labelData.te || "",
-            },
-            type: fieldDefinition?.type,
-            config: normalizedConfig,
+        const nextConfig = {
+            ...config,
+            [key]: updatedValue,
         };
 
-        onAddField(fieldData);
-
-        setLabelData({ ...defaultLabelValue });
-        setConfig({});
+        setConfig(nextConfig);
     };
 
-    const handleUpdate = () => {
-        if (isLocked) return;
+    const handleOptionsTextChange = (textValue) => {
+        const lines = String(textValue ?? "").split("\n").map((s) => (s ?? "").trim()).filter(Boolean);
+        const nextOptions = lines.map((line) => ({
+            value: line,
+            label: { en: line, te: line },
+        }));
+        handleChange("options", nextOptions, "list");
+    };
 
-        onUpdateField({
-            id: editingField.id,
-            label: {
-                en: labelData.en || "",
-                te: labelData.te || "",
-            },
-            config,
-        });
+    const handleSave = () => {
+        const finalConfig = normalizeConfig(config);
 
-        setEditingField(null);
-        setLabelData({ ...defaultLabelValue });
-        setConfig({});
+        if (editingField) {
+            onUpdateField(editingField.id, labelData, finalConfig);
+        } else {
+            onAddField(selectedField, labelData, finalConfig);
+        }
     };
 
     const renderConfigInput = (item) => {
@@ -217,147 +165,55 @@ function ConfigPanel({
             );
         }
 
+        if (item.name === "options") {
+            const normOpts = normalizeOptions(currentValue);
+            const optionsText = normOpts.map((opt) => opt.label?.en || opt.value || "").join("\n");
+
+            return (
+                <textarea
+                    rows={4}
+                    placeholder="Enter options (one per line)...&#10;e.g. Yes&#10;No&#10;Maybe"
+                    value={optionsText}
+                    disabled={isLocked}
+                    onChange={(e) => handleOptionsTextChange(e.target.value)}
+                />
+            );
+        }
+
+        if (item.name === "placeholder" || item.name === "help_text" || item.name === "validation_message") {
+            const raw = currentValue;
+            const strVal = typeof raw === "object" && raw !== null ? raw.en || "" : (raw ?? "");
+
+            const placeholderText = item.name === "validation_message"
+                ? "Enter validation message (e.g. This field is required)"
+                : item.name === "help_text"
+                ? "Enter help text / description"
+                : "Enter placeholder text";
+
+            return (
+                <input
+                    type="text"
+                    placeholder={placeholderText}
+                    value={strVal}
+                    disabled={isLocked}
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        const prevObj = typeof raw === "object" && raw !== null ? raw : {};
+                        handleChange(item.name, { ...prevObj, en: val, te: prevObj.te || val }, item.type);
+                    }}
+                />
+            );
+        }
+
         if (item.type === "list") {
             return (
                 <textarea
-                    placeholder={item.label}
+                    rows={3}
+                    placeholder={`Enter ${item.label || "list items"} (one per line)...`}
                     value={formatListValue(currentValue)}
                     disabled={isLocked}
-                    onChange={(e) => handleChange(item.name, e.target.value, item.type)}
+                    onChange={(e) => handleChange(item.name, parseListValues(e.target.value), item.type)}
                 />
-            );
-        }
-
-        if (item.type === "number") {
-            return (
-                <input
-                    type="number"
-                    placeholder={item.label}
-                    value={currentValue ?? ""}
-                    disabled={isLocked}
-                    onChange={(e) => handleChange(item.name, e.target.value, item.type)}
-                />
-            );
-        }
-
-        if (item.type === "date") {
-            return (
-                <input
-                    type="date"
-                    placeholder={item.label}
-                    value={currentValue ?? ""}
-                    disabled={isLocked}
-                    onChange={(e) => handleChange(item.name, e.target.value, item.type)}
-                />
-            );
-        }
-
-        if (item.name === "options") {
-            const normOptions = normalizeOptions(config[item.name]);
-
-            const enText = normOptions.map((opt) => opt.label.en || opt.value).join("\n");
-            const teText = normOptions.map((opt) => opt.label.te || opt.label.en || opt.value).join("\n");
-
-            const handleMultilingualOptionsChange = (newEnText, newTeText) => {
-                const enLines = String(newEnText || "")
-                    .split("\n")
-                    .map((s) => s.trim());
-                const teLines = String(newTeText || "")
-                    .split("\n")
-                    .map((s) => s.trim());
-
-                const maxLen = Math.max(enLines.length, teLines.length);
-                const nextOptions = [];
-
-                for (let i = 0; i < maxLen; i++) {
-                    const enVal = enLines[i] || "";
-                    const teVal = teLines[i] || "";
-                    if (enVal || teVal) {
-                        const rawVal = enVal || teVal;
-                        nextOptions.push({
-                            value: rawVal,
-                            label: {
-                                en: enVal || teVal,
-                                te: teVal || enVal,
-                            },
-                        });
-                    }
-                }
-
-                handleChange(item.name, nextOptions, item.type);
-            };
-
-            return (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <div className="form-group" style={{ margin: 0 }}>
-                        <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                            English Options (one option per line)
-                        </label>
-                        <textarea
-                            rows={4}
-                            placeholder={"yes\nno\nmaybe"}
-                            value={enText}
-                            disabled={isLocked}
-                            onChange={(e) => handleMultilingualOptionsChange(e.target.value, teText)}
-                        />
-                    </div>
-
-                    <div className="form-group" style={{ margin: 0 }}>
-                        <label style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                            Telugu Options (one option per line)
-                        </label>
-                        <textarea
-                            rows={4}
-                            placeholder={"అవును\nలేదు\nబహుశా"}
-                            value={teText}
-                            disabled={isLocked}
-                            onChange={(e) => handleMultilingualOptionsChange(enText, e.target.value)}
-                        />
-                    </div>
-                </div>
-            );
-        }
-
-        if (item.name === "placeholder" || item.name === "validation_message") {
-            const raw = config[item.name];
-            const valObj =
-                typeof raw === "object" && raw !== null
-                    ? raw
-                    : { en: typeof raw === "string" ? raw : "", te: "" };
-
-            const isValMsg = item.name === "validation_message";
-            const placeholderEn = isValMsg ? "English Validation Message (e.g. This field is required)" : "English Placeholder";
-            const placeholderTe = isValMsg ? "Telugu Validation Message (e.g. ఈ ఫీల్డ్ తప్పనిసరి)" : "Telugu Placeholder";
-
-            return (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    <input
-                        type="text"
-                        placeholder={placeholderEn}
-                        value={valObj.en || ""}
-                        disabled={isLocked}
-                        onChange={(e) =>
-                            handleChange(
-                                item.name,
-                                { ...valObj, en: e.target.value },
-                                item.type
-                            )
-                        }
-                    />
-                    <input
-                        type="text"
-                        placeholder={placeholderTe}
-                        value={valObj.te || ""}
-                        disabled={isLocked}
-                        onChange={(e) =>
-                            handleChange(
-                                item.name,
-                                { ...valObj, te: e.target.value },
-                                item.type
-                            )
-                        }
-                    />
-                </div>
             );
         }
 
@@ -376,48 +232,41 @@ function ConfigPanel({
         (item) => item.name === "validation_message"
     );
 
-    const valMsgObj =
-        typeof config.validation_message === "object" && config.validation_message !== null
-            ? config.validation_message
-            : { en: typeof config.validation_message === "string" ? config.validation_message : "", te: "" };
+    const rawValMsg = config.validation_message;
+    const strValMsg = typeof rawValMsg === "object" && rawValMsg !== null ? rawValMsg.en || "" : (rawValMsg ?? "");
 
     return (
         <div>
             <h2>
                 {editingField
                     ? "Edit Field"
-                    : `${resolveLabel(fieldDefinition?.label, selectedLanguage) || fieldDefinition?.type || "Field"} Configuration`}
+                    : `${resolveText(fieldDefinition?.label, "en") || fieldDefinition?.type || "Field"} Configuration`}
             </h2>
 
+            {/* Field Label Input */}
             <div className="form-group">
-                <label>English Label</label>
+                <label>Field Label</label>
                 <input
                     type="text"
-                    value={labelData.en}
+                    placeholder="Enter field label"
+                    value={labelData.en || ""}
                     disabled={isLocked}
-                    onChange={(e) =>
-                        setLabelData((prev) => ({ ...prev, en: e.target.value }))
-                    }
-                    placeholder="Enter English label"
-                />
-            </div>
-
-            <div className="form-group">
-                <label>Telugu Label</label>
-                <input
-                    type="text"
-                    value={labelData.te}
-                    disabled={isLocked}
-                    onChange={(e) =>
-                        setLabelData((prev) => ({ ...prev, te: e.target.value }))
-                    }
-                    placeholder="Enter Telugu label"
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        setLabelData((prev) => ({ ...prev, en: val, te: prev.te || val }));
+                    }}
                 />
             </div>
 
             {(fieldDefinition.config || []).map((item) => (
                 <div className="form-group" key={item.name}>
-                    <label>{item.label}</label>
+                    {item.name !== "placeholder" && item.name !== "help_text" && item.name !== "validation_message" && item.name !== "options" && (
+                        <label>{item.label}</label>
+                    )}
+                    {item.name === "placeholder" && <label>Placeholder</label>}
+                    {item.name === "help_text" && <label>Help Text</label>}
+                    {item.name === "validation_message" && <label>Validation Message</label>}
+                    {item.name === "options" && <label>Option Labels (one per line)</label>}
                     {renderConfigInput(item)}
                 </div>
             ))}
@@ -425,46 +274,30 @@ function ConfigPanel({
             {!hasValidationMsgInConfig && (
                 <div className="form-group">
                     <label>Validation Message (Optional)</label>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                        <input
-                            type="text"
-                            placeholder="English (e.g. This field is required)"
-                            value={valMsgObj.en || ""}
-                            disabled={isLocked}
-                            onChange={(e) =>
-                                handleChange(
-                                    "validation_message",
-                                    { ...valMsgObj, en: e.target.value },
-                                    "text"
-                                )
-                            }
-                        />
-                        <input
-                            type="text"
-                            placeholder="Telugu (e.g. ఈ ఫీల్డ్ తప్పనిసరి)"
-                            value={valMsgObj.te || ""}
-                            disabled={isLocked}
-                            onChange={(e) =>
-                                handleChange(
-                                    "validation_message",
-                                    { ...valMsgObj, te: e.target.value },
-                                    "text"
-                                )
-                            }
-                        />
-                    </div>
+                    <input
+                        type="text"
+                        placeholder="e.g. This field is required"
+                        value={strValMsg}
+                        disabled={isLocked}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            const prevObj = typeof rawValMsg === "object" && rawValMsg !== null ? rawValMsg : {};
+                            handleChange("validation_message", { ...prevObj, en: val, te: prevObj.te || val }, "text");
+                        }}
+                    />
                 </div>
             )}
 
             {isLocked && (
-                <p className="locked-message">
-                    A published version is selected. Editing is disabled.
+                <p style={{ color: "#ef4444", fontSize: "0.85rem", marginTop: 10 }}>
+                    Published versions are locked. Switch to a draft version to edit fields.
                 </p>
             )}
+
             <button
-                type="button"
-                className="add-btn"
-                onClick={editingField ? handleUpdate : handleAdd}
+                className="primary-btn"
+                onClick={handleSave}
+                style={{ marginTop: 20, width: "100%" }}
                 disabled={isLocked}
             >
                 {editingField ? "Update Field" : "Add Field"}

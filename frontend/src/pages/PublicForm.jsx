@@ -9,39 +9,15 @@ import {
     submitFormApi,
 } from "../api/formApi";
 import { z } from "zod";
-const resolveText = (value, language = "en") => {
-    if (!value) return "";
-    if (typeof value === "string") {
-        try {
-            const parsed = JSON.parse(value);
-            if (typeof parsed === "object" && parsed !== null) {
-                return parsed[language] || parsed.en || "";
-            }
-        } catch (e) {
-            // Plain string
-        }
-        return value;
-    }
-    if (typeof value === "object" && value !== null) {
-        return value[language] || value.en || "";
-    }
-    return String(value);
-};
-
-const resolveFieldLabel = (field, language = "en") => {
-    if (typeof field?.label === "string") {
-        return field.label;
-    }
-
-    return field?.label?.[language] || field?.label?.en || "";
-};
-
-const resolvePlaceholder = (placeholder, language = "en") => {
-    if (typeof placeholder === "string") {
-        return placeholder;
-    }
-    return placeholder?.[language] || placeholder?.en || "";
-};
+import { SUPPORTED_LANGUAGES } from "../constants/languageConstants";
+import {
+    getTranslatedText,
+    resolveText,
+    resolveFieldLabel,
+    resolvePlaceholder,
+    resolveOptionLabel,
+    resolveHelpText,
+} from "../utils/translationUtils";
 
 const normalizeOptions = (options) => {
     if (!options) return [];
@@ -929,15 +905,18 @@ export default function PublicForm() {
                 <header className="public-form-header">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
                         <div>
-                            <p className="eyebrow">Public Form</p>
-                            <h1>{resolveText(form.title, selectedLanguage) || "Untitled Form"}</h1>
-                            {form.description && <p>{resolveText(form.description, selectedLanguage)}</p>}
+                            <p className="eyebrow">{getTranslatedText("Public Form", selectedLanguage)}</p>
+                            <h1>{getTranslatedText(form.title, selectedLanguage) || getTranslatedText("Untitled Form", selectedLanguage)}</h1>
+                            {form.description && <p>{getTranslatedText(form.description, selectedLanguage)}</p>}
                         </div>
                         <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.9rem" }}>
                             Language
                             <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)}>
-                                <option value="en">English (en)</option>
-                                <option value="te">Telugu (te)</option>
+                                {SUPPORTED_LANGUAGES.map((lang) => (
+                                    <option key={lang.code} value={lang.code}>
+                                        {lang.name} ({lang.code}) {lang.nativeName !== lang.name ? `• ${lang.nativeName}` : ""}
+                                    </option>
+                                ))}
                             </select>
                         </label>
                     </div>
@@ -965,7 +944,7 @@ export default function PublicForm() {
                                 .map((field) => (
                                     <div className="public-field" key={field.id}>
                                         <label>
-                                            {resolveFieldLabel(field, selectedLanguage)}
+                                            {getTranslatedText(field.label, selectedLanguage)}
                                             {(fieldStates?.[field.id]?.required ||
                                                 field.config?.required) && (
                                                     <span className="required-mark">*</span>
@@ -1003,12 +982,12 @@ export default function PublicForm() {
                         disabled={isSubmitting}
                         className="submit-btn"
                     >
-                        {isSubmitting ? "Submitting..." : "Submit"}
+                        {getTranslatedText(isSubmitting ? "Submitting..." : "Submit", selectedLanguage)}
                     </button>
                     {isSubmitting && (
                         <div className="submit-loader">
                             <Settings className="gear-big" size={40} />
-                            <p>Please wait...</p>
+                            <p>{getTranslatedText("Please wait...", selectedLanguage)}</p>
                         </div>
                     )}
                 </form>
