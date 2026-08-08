@@ -30,13 +30,15 @@ const resources = {
     as: { translation: as },
 };
 
+const savedLanguage = localStorage.getItem("selectedLanguage") || localStorage.getItem("i18nextLng") || "en";
+
 i18n
     .use(LanguageDetector)
     .use(initReactI18next)
     .init({
         resources,
         fallbackLng: "en",
-        lng: "en",
+        lng: savedLanguage,
         interpolation: {
             escapeValue: false,
         },

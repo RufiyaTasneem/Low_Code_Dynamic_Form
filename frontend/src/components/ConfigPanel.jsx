@@ -55,6 +55,7 @@ function ConfigPanel({
     isLocked,
     selectedLanguage,
 }) {
+    const { t } = useTranslation();
     const [labelData, setLabelData] = useState({ en: "", te: "" });
     const [config, setConfig] = useState({});
 
@@ -77,7 +78,7 @@ function ConfigPanel({
     if (!fieldDefinition) {
         return (
             <div className="no-selection">
-                <h2>Select a field from the left panel</h2>
+                <h2>{t("Select a field from the left panel")}</h2>
             </div>
         );
     }
@@ -240,7 +241,7 @@ function ConfigPanel({
         <div>
             <h2>
                 {editingField
-                    ? "Edit Field"
+                    ? t("Edit Field")
                     : `${resolveText(fieldDefinition?.label, "en") || fieldDefinition?.type || "Field"} Configuration`}
             </h2>
 
@@ -301,7 +302,7 @@ function ConfigPanel({
                 style={{ marginTop: 20, width: "100%" }}
                 disabled={isLocked}
             >
-                {editingField ? t("Save Changes") : t("Create Form")}
+                {editingField ? t("Save Changes") : t("Add Field")}
             </button>
         </div>
     );

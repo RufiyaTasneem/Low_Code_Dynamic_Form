@@ -1,14 +1,15 @@
 import API from "../services/api";
 
 export const getResponsesApi = (
-    formId,
-    limit = 20,
+    formId = null,
+    limit = 50,
     offset = 0,
     search = "",
     startDate = "",
     endDate = ""
-) =>
-    API.get(`/forms/${formId}/responses`, {
+) => {
+    const endpoint = formId ? `/forms/${formId}/responses` : `/forms/all-responses`;
+    return API.get(endpoint, {
         params: {
             limit,
             offset,
@@ -17,9 +18,13 @@ export const getResponsesApi = (
             end_date: endDate,
         },
     });
-export const bulkDeleteResponsesApi = (formId, responseIds) =>
-    API.delete(`/forms/${formId}/responses/bulk`, {
+};
+
+export const bulkDeleteResponsesApi = (formId = null, responseIds = []) => {
+    const endpoint = formId ? `/forms/${formId}/responses/bulk` : `/forms/responses/bulk`;
+    return API.delete(endpoint, {
         data: {
             response_ids: responseIds,
         },
     });
+};

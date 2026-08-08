@@ -22,7 +22,10 @@ export default function LanguageSwitcher() {
     const { i18n } = useTranslation();
 
     const handleLanguageChange = (e) => {
-        i18n.changeLanguage(e.target.value);
+        const lang = e.target.value;
+        i18n.changeLanguage(lang);
+        localStorage.setItem("selectedLanguage", lang);
+        localStorage.setItem("i18nextLng", lang);
     };
 
     return (

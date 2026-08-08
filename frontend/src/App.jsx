@@ -11,6 +11,7 @@ import Analytics from "./pages/Analytics";
 import Responses from "./pages/Responses";
 import SubmissionSuccess from "./pages/SubmissionSuccess";
 import AuditLogs from "./pages/AuditLogs";
+import Settings from "./pages/Settings";
 
 import { isAuthenticated, getRole } from "./services/authService";
 
@@ -112,6 +113,16 @@ export default function App() {
           element={
             <PrivateRoute>
               <AuditLogs />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Settings */}
+        <Route
+          path="/settings"
+          element={
+            <PrivateRoute>
+              <Settings />
             </PrivateRoute>
           }
         />

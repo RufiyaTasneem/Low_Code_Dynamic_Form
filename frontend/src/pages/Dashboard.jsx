@@ -63,15 +63,14 @@ const resolveText = (value, language = "en") => {
 };
 
 export default function Dashboard() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [analytics, setAnalytics] = useState(null);
     const [loading, setLoading] = useState(true);
     const [analyticsLoading, setAnalyticsLoading] = useState(true);
-    const [selectedLanguage, setSelectedLanguage] = useState(() => {
-        return localStorage.getItem("selectedLanguage") || "en";
-    });
+
+    const selectedLanguage = i18n.language || localStorage.getItem("selectedLanguage") || "en";
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -120,13 +119,13 @@ export default function Dashboard() {
     }));
 
     const pieData = [
-        { name: "Draft", value: analytics?.form_status?.draft || 0, color: "#f59e0b" },
-        { name: "Published", value: analytics?.form_status?.published || 0, color: "#10b981" },
-        { name: "Archived", value: analytics?.form_status?.archived || 0, color: "#94a3b8" },
+        { name: t("Draft"), value: analytics?.form_status?.draft || 0, color: "#f59e0b" },
+        { name: t("Published"), value: analytics?.form_status?.published || 0, color: "#10b981" },
+        { name: t("Archived"), value: analytics?.form_status?.archived || 0, color: "#94a3b8" },
     ].filter((item) => item.value > 0 || (analytics?.form_status && Object.values(analytics.form_status).every(v => v === 0)));
 
     const topFormsData = (analytics?.top_forms || []).map((item) => ({
-        name: resolveText(item.name, selectedLanguage) || "Form",
+        name: resolveText(item.name, selectedLanguage) || t("Form"),
         responses: item.responses || 0,
     }));
 
@@ -135,8 +134,8 @@ export default function Dashboard() {
     return (
         <DashboardLayout>
             <TopBar
-                title="Dashboard"
-                subtitle="Build, manage and analyze your forms from one place."
+                title={t("Dashboard")}
+                subtitle={t("Build, manage and analyze your forms from one place.")}
                 showButton={false}
             />
 
@@ -144,30 +143,17 @@ export default function Dashboard() {
                 {/* 1. Header */}
                 <div className="dashboard-header">
                     <div>
-                        <p className="eyebrow">Form Studio Overview</p>
-                        <h1 className="dashboard-title">Dashboard</h1>
+                        <p className="eyebrow">{t("Form Studio Overview")}</p>
+                        <h1 className="dashboard-title">{t("Dashboard")}</h1>
                         <p className="dashboard-subtitle">
-                            Build, manage and analyze your forms from one place.
+                            {t("Build, manage and analyze your forms from one place.")}
                         </p>
                     </div>
-                    <label className="lang-select-label">
-                        Language
-                        <select
-                            value={selectedLanguage}
-                            onChange={(e) => {
-                                setSelectedLanguage(e.target.value);
-                                localStorage.setItem("selectedLanguage", e.target.value);
-                            }}
-                        >
-                            <option value="en">English (en)</option>
-                            <option value="te">Telugu (te)</option>
-                        </select>
-                    </label>
                 </div>
 
                 {/* Quick Actions */}
                 <div className="quick-actions-section">
-                    <h3 className="section-label">Quick Actions</h3>
+                    <h3 className="section-label">{t("Quick Actions")}</h3>
                     <div className="quick-actions-grid">
                         <button
                             className="quick-action-card"
@@ -178,8 +164,8 @@ export default function Dashboard() {
                                 <PlusCircle size={20} />
                             </div>
                             <div className="quick-action-info">
-                                <strong>Create New Form</strong>
-                                <span>Start building a dynamic form</span>
+                                <strong>{t("Create New Form")}</strong>
+                                <span>{t("Start building a dynamic form")}</span>
                             </div>
                         </button>
 
@@ -192,8 +178,8 @@ export default function Dashboard() {
                                 <ListFilter size={20} />
                             </div>
                             <div className="quick-action-info">
-                                <strong>View Forms</strong>
-                                <span>Browse form inventory</span>
+                                <strong>{t("View Forms")}</strong>
+                                <span>{t("Browse form inventory")}</span>
                             </div>
                         </button>
 
@@ -206,8 +192,8 @@ export default function Dashboard() {
                                 <Eye size={20} />
                             </div>
                             <div className="quick-action-info">
-                                <strong>Analytics</strong>
-                                <span>Inspect metrics & charts</span>
+                                <strong>{t("Analytics")}</strong>
+                                <span>{t("Inspect metrics & charts")}</span>
                             </div>
                         </button>
 
@@ -220,8 +206,8 @@ export default function Dashboard() {
                                 <ShieldCheck size={20} />
                             </div>
                             <div className="quick-action-info">
-                                <strong>Audit Logs</strong>
-                                <span>Review security activity</span>
+                                <strong>{t("Audit Logs")}</strong>
+                                <span>{t("Review security activity")}</span>
                             </div>
                         </button>
                     </div>
@@ -231,7 +217,7 @@ export default function Dashboard() {
                 <div className="stats-grid">
                     <div className="stat-card">
                         <div className="stat-card-top">
-                            <span className="stat-card-title">Total Forms</span>
+                            <span className="stat-card-title">{t("Total Forms")}</span>
                             <div className="stat-card-icon icon-purple">
                                 <FileText size={20} />
                             </div>
@@ -243,15 +229,15 @@ export default function Dashboard() {
                         )}
                         <div className="stat-card-meta">
                             <span className="meta-positive">
-                                <TrendingUp size={14} /> Live
+                                <TrendingUp size={14} /> {t("Live")}
                             </span>
-                            <span className="meta-text">total created forms</span>
+                            <span className="meta-text">{t("total created forms")}</span>
                         </div>
                     </div>
 
                     <div className="stat-card">
                         <div className="stat-card-top">
-                            <span className="stat-card-title">Published Forms</span>
+                            <span className="stat-card-title">{t("Published Forms")}</span>
                             <div className="stat-card-icon icon-green">
                                 <CheckCircle2 size={20} />
                             </div>
@@ -265,13 +251,13 @@ export default function Dashboard() {
                             <span className="meta-positive">
                                 {totalForms > 0 ? Math.round((publishedForms / totalForms) * 100) : 0}%
                             </span>
-                            <span className="meta-text">active & accepting entries</span>
+                            <span className="meta-text">{t("active & accepting entries")}</span>
                         </div>
                     </div>
 
                     <div className="stat-card">
                         <div className="stat-card-top">
-                            <span className="stat-card-title">Draft Forms</span>
+                            <span className="stat-card-title">{t("Draft Forms")}</span>
                             <div className="stat-card-icon icon-amber">
                                 <Clock size={20} />
                             </div>
@@ -283,14 +269,14 @@ export default function Dashboard() {
                         )}
                         <div className="stat-card-meta">
                             <span className="meta-neutral">
-                                {archivedForms > 0 ? `${archivedForms} Archived` : "Work in progress"}
+                                {archivedForms > 0 ? `${archivedForms} ${t("Archived")}` : t("Work in progress")}
                             </span>
                         </div>
                     </div>
 
                     <div className="stat-card">
                         <div className="stat-card-top">
-                            <span className="stat-card-title">Total Responses</span>
+                            <span className="stat-card-title">{t("Total Responses")}</span>
                             <div className="stat-card-icon icon-blue">
                                 <Users size={20} />
                             </div>
@@ -302,22 +288,22 @@ export default function Dashboard() {
                         )}
                         <div className="stat-card-meta">
                             <span className="meta-positive">
-                                <TrendingUp size={14} /> Live
+                                <TrendingUp size={14} /> {t("Live")}
                             </span>
-                            <span className="meta-text">submissions received</span>
+                            <span className="meta-text">{t("submissions received")}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* 3. Analytics Section (3 Charts Grid) */}
                 <div className="analytics-section">
-                    <h3 className="section-label">Analytics</h3>
+                    <h3 className="section-label">{t("Analytics")}</h3>
 
                     {!hasResponses && !analyticsLoading ? (
                         <div className="analytics-empty-card">
                             <BarChart3 size={40} />
-                            <h4>No analytics available yet.</h4>
-                            <p>Submit responses to your published forms to generate real-time metrics and charts.</p>
+                            <h4>{t("No analytics available yet.")}</h4>
+                            <p>{t("Submit responses to your published forms to generate real-time metrics and charts.")}</p>
                         </div>
                     ) : (
                         <div className="charts-grid">
@@ -326,9 +312,9 @@ export default function Dashboard() {
                                 <div className="card-header-flex">
                                     <div>
                                         <h4 className="card-title">
-                                            <LineIcon size={18} /> Responses Over Time
+                                            <LineIcon size={18} /> {t("Responses Over Time")}
                                         </h4>
-                                        <p className="card-subtitle">Daily submission trend (Last 30 days)</p>
+                                        <p className="card-subtitle">{t("Daily submission trend (Last 30 days)")}</p>
                                     </div>
                                 </div>
                                 {analyticsLoading ? (
@@ -350,7 +336,7 @@ export default function Dashboard() {
                                                 <Line
                                                     type="monotone"
                                                     dataKey="count"
-                                                    name="Responses"
+                                                    name={t("Responses")}
                                                     stroke="#7c3aed"
                                                     strokeWidth={3}
                                                     dot={{ r: 3, fill: "#7c3aed" }}
@@ -367,9 +353,9 @@ export default function Dashboard() {
                                 <div className="card-header-flex">
                                     <div>
                                         <h4 className="card-title">
-                                            <PieIcon size={18} /> Forms by Status
+                                            <PieIcon size={18} /> {t("Forms by Status")}
                                         </h4>
-                                        <p className="card-subtitle">Draft, Published, and Archived</p>
+                                        <p className="card-subtitle">{t("Draft, Published, and Archived")}</p>
                                     </div>
                                 </div>
                                 {analyticsLoading ? (
@@ -412,9 +398,9 @@ export default function Dashboard() {
                                 <div className="card-header-flex">
                                     <div>
                                         <h4 className="card-title">
-                                            <BarChart3 size={18} /> Top Forms
+                                            <BarChart3 size={18} /> {t("Top Forms")}
                                         </h4>
-                                        <p className="card-subtitle">Top 5 forms by response count</p>
+                                        <p className="card-subtitle">{t("Top 5 forms by response count")}</p>
                                     </div>
                                 </div>
                                 {analyticsLoading ? (
@@ -433,7 +419,7 @@ export default function Dashboard() {
                                                         color: "#ffffff",
                                                     }}
                                                 />
-                                                <Bar dataKey="responses" name="Responses" fill="#6366f1" radius={[0, 8, 8, 0]} />
+                                                <Bar dataKey="responses" name={t("Responses")} fill="#6366f1" radius={[0, 8, 8, 0]} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </div>
@@ -448,7 +434,7 @@ export default function Dashboard() {
                     <div className="dashboard-side-card">
                         <div className="card-header">
                             <h3 className="card-title">
-                                <Activity size={18} /> Recent Activity
+                                <Activity size={18} /> {t("Recent Activity")}
                             </h3>
                         </div>
                         <div className="activity-timeline">
@@ -461,7 +447,7 @@ export default function Dashboard() {
                             ) : recentForms.length === 0 && recentResponses.length === 0 ? (
                                 <div className="empty-dashboard-box">
                                     <Inbox size={24} />
-                                    <p>No recent activity recorded yet.</p>
+                                    <p>{t("No recent activity recorded yet.")}</p>
                                 </div>
                             ) : (
                                 <>
@@ -469,7 +455,7 @@ export default function Dashboard() {
                                         <div className="timeline-item" key={`f-${f.id}`}>
                                             <div className="timeline-dot purple" />
                                             <div className="timeline-content">
-                                                <strong>Form "{resolveText(f.title, selectedLanguage)}" updated</strong>
+                                                <strong>{t("Form")} "{resolveText(f.title, selectedLanguage)}" {t("updated")}</strong>
                                                 <span className="timeline-time">{formatTimestamp(f.updated_at)}</span>
                                             </div>
                                         </div>
@@ -478,7 +464,7 @@ export default function Dashboard() {
                                         <div className="timeline-item" key={`r-${r.id}`}>
                                             <div className="timeline-dot green" />
                                             <div className="timeline-content">
-                                                <strong>New response for "{resolveText(r.form_title, selectedLanguage)}"</strong>
+                                                <strong>{t("New response for")} "{resolveText(r.form_title, selectedLanguage)}"</strong>
                                                 <span className="timeline-time">{formatTimestamp(r.submitted_at)}</span>
                                             </div>
                                         </div>
@@ -491,44 +477,44 @@ export default function Dashboard() {
                     <div className="dashboard-side-card">
                         <div className="card-header">
                             <h3 className="card-title">
-                                <Server size={18} /> System Health
+                                <Server size={18} /> {t("System Health")}
                             </h3>
                         </div>
                         <div className="health-list">
                             <div className="health-item">
                                 <div className="health-left">
                                     <Server size={16} className="health-icon" />
-                                    <span>Backend Healthy</span>
+                                    <span>{t("Backend Healthy")}</span>
                                 </div>
                                 <span className="health-indicator green">
-                                    <Check size={12} /> Operational
+                                    <Check size={12} /> {t("Operational")}
                                 </span>
                             </div>
                             <div className="health-item">
                                 <div className="health-left">
                                     <Database size={16} className="health-icon" />
-                                    <span>Database Connected</span>
+                                    <span>{t("Database Connected")}</span>
                                 </div>
                                 <span className="health-indicator green">
-                                    <Check size={12} /> Operational
+                                    <Check size={12} /> {t("Operational")}
                                 </span>
                             </div>
                             <div className="health-item">
                                 <div className="health-left">
                                     <HardDrive size={16} className="health-icon" />
-                                    <span>Storage Available</span>
+                                    <span>{t("Storage Available")}</span>
                                 </div>
                                 <span className="health-indicator green">
-                                    <Check size={12} /> Operational
+                                    <Check size={12} /> {t("Operational")}
                                 </span>
                             </div>
                             <div className="health-item">
                                 <div className="health-left">
                                     <ShieldCheck size={16} className="health-icon" />
-                                    <span>API Healthy</span>
+                                    <span>{t("API Healthy")}</span>
                                 </div>
                                 <span className="health-indicator green">
-                                    <Check size={12} /> Operational
+                                    <Check size={12} /> {t("Operational")}
                                 </span>
                             </div>
                         </div>
@@ -539,9 +525,9 @@ export default function Dashboard() {
                 <div className="recent-forms-section">
                     <div className="card-header-flex">
                         <div>
-                            <h3 className="card-title">Recent Forms</h3>
+                            <h3 className="card-title">{t("Recent Forms")}</h3>
                             <p className="card-subtitle">
-                                Manage your latest forms and view submission stats
+                                {t("Manage your latest forms and view submission stats")}
                             </p>
                         </div>
                         <button
@@ -549,7 +535,7 @@ export default function Dashboard() {
                             type="button"
                             onClick={() => navigate("/forms")}
                         >
-                            View All Forms <ExternalLink size={14} />
+                            {t("View All Forms")} <ExternalLink size={14} />
                         </button>
                     </div>
 
@@ -563,29 +549,29 @@ export default function Dashboard() {
                         ) : recentForms.length === 0 ? (
                             <div className="empty-dashboard-box">
                                 <Inbox size={32} />
-                                <p>No forms created yet. Click "Create New Form" above to get started!</p>
+                                <p>{t("No forms created yet. Click \"Create New Form\" above to get started!")}</p>
                             </div>
                         ) : (
                             <table className="dashboard-table">
                                 <thead>
                                     <tr>
-                                        <th>Form Name</th>
-                                        <th>Status</th>
-                                        <th>Responses Count</th>
-                                        <th>Last Updated</th>
-                                        <th style={{ textAlign: "right" }}>Actions</th>
+                                        <th>{t("Form Name")}</th>
+                                        <th>{t("Status")}</th>
+                                        <th>{t("Responses Count")}</th>
+                                        <th>{t("Last Updated")}</th>
+                                        <th style={{ textAlign: "right" }}>{t("Actions")}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {recentForms.map((item, idx) => {
                                         const statusLower = (item.status || "draft").toLowerCase();
-                                        const formTitle = resolveText(item.title, selectedLanguage) || "Form";
+                                        const formTitle = resolveText(item.title, selectedLanguage) || t("Form");
                                         return (
                                             <tr key={item.id || idx}>
                                                 <td className="font-semibold">{formTitle}</td>
                                                 <td>
                                                     <span className={`status-badge ${statusLower}`}>
-                                                        {item.status || "Draft"}
+                                                        {t(item.status || "Draft")}
                                                     </span>
                                                 </td>
                                                 <td>{item.responses ?? 0}</td>
@@ -596,7 +582,7 @@ export default function Dashboard() {
                                                         type="button"
                                                         onClick={() => navigate(`/builder?id=${item.id}`)}
                                                     >
-                                                        View / Edit
+                                                        {t("View / Edit")}
                                                     </button>
                                                 </td>
                                             </tr>
@@ -613,10 +599,10 @@ export default function Dashboard() {
                     <div className="card-header-flex">
                         <div>
                             <h3 className="card-title">
-                                <MessageSquare size={18} /> Recent Responses
+                                <MessageSquare size={18} /> {t("Recent Responses")}
                             </h3>
                             <p className="card-subtitle">
-                                Latest submissions received across active forms
+                                {t("Latest submissions received across active forms")}
                             </p>
                         </div>
                         <button
@@ -624,7 +610,7 @@ export default function Dashboard() {
                             type="button"
                             onClick={() => navigate("/responses")}
                         >
-                            View All Responses <ExternalLink size={14} />
+                            {t("View All Responses")} <ExternalLink size={14} />
                         </button>
                     </div>
 
@@ -638,28 +624,28 @@ export default function Dashboard() {
                         ) : recentResponses.length === 0 ? (
                             <div className="empty-dashboard-box">
                                 <Inbox size={32} />
-                                <p>No form responses submitted yet.</p>
+                                <p>{t("No form responses submitted yet.")}</p>
                             </div>
                         ) : (
                             <table className="dashboard-table">
                                 <thead>
                                     <tr>
-                                        <th>Form Name</th>
-                                        <th>Submitted At</th>
-                                        <th>Status</th>
-                                        <th style={{ textAlign: "right" }}>Actions</th>
+                                        <th>{t("Form Name")}</th>
+                                        <th>{t("Submitted At")}</th>
+                                        <th>{t("Status")}</th>
+                                        <th style={{ textAlign: "right" }}>{t("Actions")}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {recentResponses.map((item, idx) => {
-                                        const formName = resolveText(item.form_title, selectedLanguage) || "Form";
+                                        const formName = resolveText(item.form_title, selectedLanguage) || t("Form");
                                         return (
                                             <tr key={item.id || idx}>
                                                 <td className="font-semibold">{formName}</td>
                                                 <td className="text-muted">{formatTimestamp(item.submitted_at)}</td>
                                                 <td>
                                                     <span className="status-badge published">
-                                                        {item.status || "Completed"}
+                                                        {t(item.status || "Completed")}
                                                     </span>
                                                 </td>
                                                 <td style={{ textAlign: "right" }}>
@@ -668,7 +654,7 @@ export default function Dashboard() {
                                                         type="button"
                                                         onClick={() => navigate(`/responses?form_id=${item.form_id || item.id}`)}
                                                     >
-                                                        Inspect
+                                                        {t("Inspect")}
                                                     </button>
                                                 </td>
                                             </tr>

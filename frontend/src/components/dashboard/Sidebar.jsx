@@ -37,16 +37,16 @@ export default function Sidebar() {
                     {t("Builder")}
                 </NavLink>
 
-                <NavLink to="/analytics" className={({ isActive }) => (isActive ? "active" : "")}>
-                    {t("Analytics")}
-                </NavLink>
-
                 <NavLink to="/responses" className={({ isActive }) => (isActive ? "active" : "")}>
                     {t("Responses")}
                 </NavLink>
 
                 <NavLink to="/audit-logs" className={({ isActive }) => (isActive ? "active" : "")}>
-                    Audit Logs
+                    {t("Audit Logs")}
+                </NavLink>
+
+                <NavLink to="/settings" className={({ isActive }) => (isActive ? "active" : "")}>
+                    {t("Settings")}
                 </NavLink>
             </nav>
 

@@ -14,6 +14,7 @@ export default function Responses() {
     const { t } = useTranslation();
     const [responses, setResponses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [selectedResponse, setSelectedResponse] = useState(null);
     const [selectedResponses, setSelectedResponses] = useState([]);
@@ -23,16 +24,15 @@ export default function Responses() {
     const [search, setSearch] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-    const limit = 20;
+    const limit = 50;
     const [offset, setOffset] = useState(0);
 
     const formId = searchParams.get("id");
 
     const loadResponses = useCallback(async () => {
-        if (!formId) return;
-
         try {
             setLoading(true);
+            setError(null);
 
             const res = await getResponsesApi(
                 formId,
@@ -43,29 +43,27 @@ export default function Responses() {
                 endDate
             );
 
-            setResponses(res.data.responses);
-            setTotal(res.data.total);
+            setResponses(res.data?.responses || []);
+            setTotal(res.data?.total || 0);
         } catch (err) {
-            console.error("Failed to load responses:", err);
+            console.error("Failed to load responses - HTTP Status:", err.response?.status);
+            console.error("Failed to load responses - Response Data:", err.response?.data);
+            console.error("Failed to load responses - URL:", err.config?.url);
+            console.error("Failed to load responses - Params:", err.config?.params);
+            setError(t("Failed to load responses. Please try again."));
             setResponses([]);
+            setTotal(0);
         } finally {
             setLoading(false);
         }
-    }, [formId, offset, search, startDate, endDate]);
+    }, [formId, offset, search, startDate, endDate, t]);
+
     useEffect(() => {
-        if (formId) {
-            loadResponses();
-        }
-    }, [
-        formId,
-        offset,
-        search,
-        startDate,
-        endDate,
-    ]);
+        loadResponses();
+    }, [loadResponses]);
 
     const deleteSelectedResponses = async () => {
-        if (!formId || selectedResponses.length === 0) {
+        if (selectedResponses.length === 0) {
             return;
         }
 
@@ -74,10 +72,23 @@ export default function Responses() {
             setShowDeleteModal(false);
             setSelectedResponses([]);
             await loadResponses();
-            alert("Responses deleted successfully.");
+            alert(t("Responses deleted successfully."));
         } catch (err) {
             console.error("Failed to delete responses:", err);
-            alert("Failed to delete selected responses. Please try again.");
+            alert(t("Failed to delete selected responses. Please try again."));
+        }
+    };
+
+    const hasActiveFilters = Boolean(search || startDate || endDate);
+
+    const formatDate = (isoStr) => {
+        if (!isoStr) return "";
+        try {
+            const d = new Date(isoStr);
+            if (isNaN(d.getTime())) return isoStr;
+            return d.toLocaleString();
+        } catch (e) {
+            return isoStr;
         }
     };
 
@@ -88,10 +99,9 @@ export default function Responses() {
                 subtitle="View and inspect submitted responses"
             />
             <div className="response-filters">
-
                 <input
                     type="text"
-                    placeholder="🔍 Search responses..."
+                    placeholder={`🔍 ${t("Search responses...")}`}
                     value={search}
                     onChange={(e) => {
                         setOffset(0);
@@ -102,6 +112,7 @@ export default function Responses() {
                 <input
                     type="date"
                     value={startDate}
+                    title={t("Start Date")}
                     onChange={(e) => {
                         setOffset(0);
                         setStartDate(e.target.value);
@@ -111,13 +122,14 @@ export default function Responses() {
                 <input
                     type="date"
                     value={endDate}
+                    title={t("End Date")}
                     onChange={(e) => {
                         setOffset(0);
                         setEndDate(e.target.value);
                     }}
                 />
-
             </div>
+
             <div className="responses-page">
                 <h2>{t("Responses")}</h2>
                 <div className="bulk-actions">
@@ -129,10 +141,19 @@ export default function Responses() {
                         🗑 {t("Delete")} ({selectedResponses.length})
                     </button>
                 </div>
-                {loading ? (
+
+                {error ? (
+                    <div className="empty-state" style={{ color: "#ef4444" }}>
+                        {error}
+                    </div>
+                ) : loading ? (
                     <p>{t("Loading...")}</p>
                 ) : responses.length === 0 ? (
-                    <p>{t("No responses found.")}</p>
+                    <div className="empty-state">
+                        {hasActiveFilters
+                            ? t("No responses found for the selected date range.")
+                            : t("No responses found.")}
+                    </div>
                 ) : (
                     <>
                         <table className="responses-table">
@@ -157,8 +178,9 @@ export default function Responses() {
                                         />
                                     </th>
 
+                                    <th>{t("Form Title")}</th>
                                     <th>Response ID</th>
-                                    <th>Submitted At</th>
+                                    <th>{t("Submitted On")}</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -186,24 +208,24 @@ export default function Responses() {
                                                 }}
                                             />
                                         </td>
+                                        <td>
+                                            <strong>{response.form_title || `Form #${response.form_id}`}</strong>
+                                        </td>
                                         <td>{response.response_uid}</td>
 
                                         <td>
-                                            {new Date(
-                                                response.submitted_at
-                                            ).toLocaleString()}
+                                            {formatDate(response.submitted_at)}
                                         </td>
 
                                         <td>
                                             <button
+                                                className="view-btn"
                                                 onClick={() => {
-                                                    setSelectedResponse(
-                                                        response
-                                                    );
+                                                    setSelectedResponse(response);
                                                     setShowModal(true);
                                                 }}
                                             >
-                                                View
+                                                {t("View")}
                                             </button>
                                         </td>
                                     </tr>
@@ -211,29 +233,34 @@ export default function Responses() {
                             </tbody>
                         </table>
 
-                        <div className="pagination">
-                            <button
-                                disabled={offset === 0}
-                                onClick={() =>
-                                    setOffset((prev) =>
-                                        Math.max(prev - limit, 0)
-                                    )
-                                }
-                            >
-                                ◀ Previous
-                            </button>
+                        {total > limit && (
+                            <div className="pagination">
+                                <button
+                                    disabled={offset === 0}
+                                    onClick={() =>
+                                        setOffset((prev) =>
+                                            Math.max(prev - limit, 0)
+                                        )
+                                    }
+                                >
+                                    ◀ Previous
+                                </button>
 
-                            <span>Page {offset / limit + 1} of {Math.ceil(total / limit)}</span>
+                                <span>
+                                    Page {Math.floor(offset / limit) + 1} of{" "}
+                                    {Math.ceil(total / limit)}
+                                </span>
 
-                            <button
-                                disabled={offset + limit >= total}
-                                onClick={() =>
-                                    setOffset((prev) => prev + limit)
-                                }
-                            >
-                                Next ▶
-                            </button>
-                        </div>
+                                <button
+                                    disabled={offset + limit >= total}
+                                    onClick={() =>
+                                        setOffset((prev) => prev + limit)
+                                    }
+                                >
+                                    Next ▶
+                                </button>
+                            </div>
+                        )}
                     </>
                 )}
 
@@ -243,70 +270,89 @@ export default function Responses() {
                             <h2>Response Details</h2>
 
                             <p>
+                                <strong>{t("Form Title")}:</strong>{" "}
+                                {selectedResponse.form_title || `Form #${selectedResponse.form_id}`}
+                            </p>
+
+                            <p>
                                 <strong>Response ID:</strong>{" "}
                                 {selectedResponse.response_uid}
                             </p>
 
                             <p>
-                                <strong>Submitted:</strong>{" "}
-                                {new Date(
-                                    selectedResponse.submitted_at
-                                ).toLocaleString()}
+                                <strong>{t("Submitted On")}:</strong>{" "}
+                                {formatDate(selectedResponse.submitted_at)}
                             </p>
 
-                            <hr />
+                            <hr style={{ margin: "16px 0", borderColor: "var(--border)" }} />
 
-                            {Object.entries(
-                                selectedResponse.values || {}
-                            ).map(([label, value]) => (
-                                <div
-                                    className="response-field"
-                                    key={label}
-                                >
-                                    <strong>{label}</strong>
-                                    <p>{value || "-"}</p>
+                            <h3>Submitted Values</h3>
+                            {selectedResponse.values &&
+                            Object.keys(selectedResponse.values).length > 0 ? (
+                                <div style={{ display: "grid", gap: "12px", marginTop: "12px" }}>
+                                    {Object.entries(selectedResponse.values).map(
+                                        ([fieldLabel, val]) => (
+                                            <div
+                                                key={fieldLabel}
+                                                style={{
+                                                    background: "var(--surface-muted)",
+                                                    padding: "10px 14px",
+                                                    borderRadius: "8px",
+                                                    border: "1px solid var(--border)",
+                                                }}
+                                            >
+                                                <strong style={{ color: "var(--text-subtle)", fontSize: "0.85rem" }}>
+                                                    {fieldLabel}
+                                                </strong>
+                                                <p style={{ margin: "4px 0 0 0", color: "var(--text)", fontWeight: 500 }}>
+                                                    {String(val)}
+                                                </p>
+                                            </div>
+                                        )
+                                    )}
                                 </div>
-                            ))}
+                            ) : (
+                                <p style={{ color: "var(--text-muted)", marginTop: "8px" }}>
+                                    No value details recorded.
+                                </p>
+                            )}
 
-                            <button
-                                onClick={() => {
-                                    setShowModal(false);
-                                    setSelectedResponse(null);
-                                }}
-                            >
-                                Close
-                            </button>
+                            <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
+                                <button
+                                    className="close-btn"
+                                    onClick={() => {
+                                        setShowModal(false);
+                                        setSelectedResponse(null);
+                                    }}
+                                >
+                                    Close
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
+
                 {showDeleteModal && (
                     <div className="modal-overlay">
                         <div className="response-modal">
-
                             <h2>Delete Responses</h2>
-
-                            <p>
-                                Are you sure you want to permanently delete{" "}
-                                <strong>{selectedResponses.length}</strong> selected response(s)?
+                            <p style={{ marginTop: "12px", color: "var(--text-muted)" }}>
+                                Are you sure you want to delete {selectedResponses.length} selected response(s)?
                             </p>
-
-                            <p className="warning-text">
-                                ⚠ This action cannot be undone.
-                            </p>
-
-                            <div className="modal-actions">
-                                <button onClick={() => setShowDeleteModal(false)}>
-                                    Cancel
-                                </button>
-
+                            <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
                                 <button
-                                    className="danger-btn"
+                                    className="close-btn"
+                                    onClick={() => setShowDeleteModal(false)}
+                                >
+                                    {t("Cancel")}
+                                </button>
+                                <button
+                                    className="delete-selected-btn"
                                     onClick={deleteSelectedResponses}
                                 >
-                                    Delete
+                                    {t("Delete")}
                                 </button>
                             </div>
-
                         </div>
                     </div>
                 )}

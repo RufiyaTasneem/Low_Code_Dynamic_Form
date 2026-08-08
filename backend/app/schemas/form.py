@@ -38,6 +38,9 @@ class FormCreate(BaseModel):
 
 class FormResponse(FormCreate):
     id: int
+    version: Optional[int] = 1
+    status: Optional[str] = "draft"
+    retention_days: Optional[int] = None
     fields: List[FieldResponse] = []
 
     class Config:

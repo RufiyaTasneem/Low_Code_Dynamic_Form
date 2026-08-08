@@ -20,7 +20,10 @@ from app.schemas.form import RetentionPolicyUpdate
 from app.schemas.response import BulkDeleteRequest
 from app.services.form_service import update_retention_policy
 from app.models.user import User
-from app.services.response_browser_service import get_form_responses as get_form_responses_service
+from app.services.response_browser_service import (
+    get_form_responses as get_form_responses_service,
+    get_user_responses,
+)
 from app.schemas.form import (
     FormCreate,
     FormResponse,
@@ -267,6 +270,42 @@ def my_forms(
         db,
         current_user.id,
     )
+
+
+@router.get("/all-responses")
+def get_all_user_responses(
+    limit: int = 50,
+    offset: int = 0,
+    search: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return get_user_responses(
+        db=db,
+        user_id=current_user.id,
+        form_id=None,
+        limit=limit,
+        offset=offset,
+        search=search,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+
+@router.delete("/responses/bulk")
+def bulk_delete_global_responses_api(
+    payload: BulkDeleteRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return bulk_delete_responses(
+        db=db,
+        user_id=current_user.id,
+        response_ids=payload.response_ids,
+        form_id=None,
+    )
 @router.get("/{form_id}", response_model=FormResponse)
 def get_form_details(
     form_id: int,
@@ -357,11 +396,13 @@ def bulk_delete_responses_api(
     current_user: User = Depends(get_current_user),
 ):
     return bulk_delete_responses(
-    db=db,
-    form_id=form_id,
-    user_id=current_user.id,
-    response_ids=payload.response_ids,
-)
+        db=db,
+        user_id=current_user.id,
+        response_ids=payload.response_ids,
+        form_id=form_id,
+    )
+
+
 @router.get("/{form_id}/analytics")
 def analytics(
     form_id: int,
@@ -371,21 +412,22 @@ def analytics(
         db,
         form_id,
     )
+
+
 @router.get("/{form_id}/responses")
 def get_form_responses(
     form_id: int,
-    limit: int = 20,
+    limit: int = 50,
     offset: int = 0,
-
     search: str | None = None,
-
     start_date: str | None = None,
     end_date: str | None = None,
-
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    return get_form_responses_service(
+    return get_user_responses(
         db=db,
+        user_id=current_user.id,
         form_id=form_id,
         limit=limit,
         offset=offset,

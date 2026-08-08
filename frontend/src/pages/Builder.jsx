@@ -27,21 +27,16 @@ import { evaluateRulesApi } from "../api/formApi";
 import SortableField from "../components/SortableField";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import TopBar from "../components/dashboard/TopBar";
+import {
+    resolveText,
+    resolveFieldLabel,
+    resolvePlaceholder,
+    normalizeOptions,
+    resolveOptionDisplayLabel,
+    resolveOptionValue,
+} from "../utils/translationUtils";
 
-const resolveFieldLabel = (field, language = "en") => {
-    if (typeof field?.label === "string") {
-        return field.label;
-    }
 
-    return field?.label?.[language] || field?.label?.en || "";
-};
-
-const resolvePlaceholder = (placeholder, language = "en") => {
-    if (typeof placeholder === "string") {
-        return placeholder;
-    }
-    return placeholder?.[language] || placeholder?.en || "";
-};
 
 const renderPreviewInput = (
     field,
@@ -118,102 +113,24 @@ const renderPreviewInput = (
         );
     }
 
-const normalizeOptions = (options) => {
-    if (!options) return [];
-    let list = options;
-    if (typeof list === "string") {
-        list = list.split(/[,\n]+/).map((s) => s.trim()).filter(Boolean);
-    }
-    if (!Array.isArray(list)) return [];
-
-    return list.map((opt) => {
-        if (!opt) return { value: "", label: { en: "", te: "" } };
-
-        if (typeof opt === "string") {
-            try {
-                const parsed = JSON.parse(opt);
-                if (typeof parsed === "object" && parsed !== null && (parsed.value || parsed.label || parsed.en)) {
-                    const val = parsed.value || parsed.label?.en || parsed.en || "";
-                    const enLabel = (parsed.label && typeof parsed.label === "object")
-                        ? (parsed.label.en || val)
-                        : (typeof parsed.label === "string" ? parsed.label : (parsed.en || val));
-                    const teLabel = (parsed.label && typeof parsed.label === "object")
-                        ? (parsed.label.te || enLabel)
-                        : (parsed.te || enLabel);
-                    return {
-                        value: val,
-                        label: { en: enLabel, te: teLabel }
-                    };
-                }
-            } catch (e) {
-                // Plain string
-            }
-            return {
-                value: opt,
-                label: { en: opt, te: opt }
-            };
-        }
-
-        if (typeof opt === "object" && opt !== null) {
-            const val = opt.value || opt.label?.en || opt.en || opt.te || "";
-            const enLabel = (opt.label && typeof opt.label === "object")
-                ? (opt.label.en || val)
-                : (typeof opt.label === "string" ? opt.label : (opt.en || val));
-            const teLabel = (opt.label && typeof opt.label === "object")
-                ? (opt.label.te || enLabel)
-                : (opt.te || enLabel);
-
-            return {
-                value: val,
-                label: { en: enLabel, te: teLabel }
-            };
-        }
-
-        return {
-            value: String(opt),
-            label: { en: String(opt), te: String(opt) }
-        };
-    });
-};
-
-const resolveOptionDisplayLabel = (option, language = "en") => {
-    if (!option) return "";
-    if (typeof option === "string") return option;
-    if (typeof option === "object" && option !== null) {
-        if (option.label && typeof option.label === "object") {
-            return option.label[language] || option.label.en || option.label.te || option.value || "";
-        }
-        if (typeof option.label === "string") return option.label;
-        return option[language] || option.en || option.te || option.value || "";
-    }
-    return String(option);
-};
-
-const resolveOptionValue = (option) => {
-    if (!option) return "";
-    if (typeof option === "string") return option;
-    if (typeof option === "object" && option !== null) {
-        return option.value || option.label?.en || option.en || JSON.stringify(option);
-    }
-    return String(option);
-};
-
-    if (field.type === "dropdown") {
+    if (field.type === "dropdown" || field.type === "select") {
         const rawOptions = normalizeOptions(config?.options);
 
         return (
             <select
                 id={inputId}
+                className="builder-preview-select"
                 value={formValues[field.id] || ""}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
             >
-                <option value="">Select...</option>
-
+                <option value="">
+                    {resolvePlaceholder(config?.placeholder, selectedLanguage) || "Select..."}
+                </option>
                 {rawOptions.map((opt, idx) => {
-                    const optValue = resolveOptionValue(opt);
+                    const optVal = resolveOptionValue(opt);
                     const optLabel = resolveOptionDisplayLabel(opt, selectedLanguage);
                     return (
-                        <option key={idx} value={optValue}>
+                        <option key={idx} value={optVal}>
                             {optLabel}
                         </option>
                     );
@@ -326,24 +243,7 @@ const resolveOptionValue = (option) => {
     );
 };
 
-const resolveText = (value, language = "en") => {
-    if (!value) return "";
-    if (typeof value === "string") {
-        try {
-            const parsed = JSON.parse(value);
-            if (typeof parsed === "object" && parsed !== null) {
-                return parsed[language] || parsed.en || "";
-            }
-        } catch (e) {
-            // Plain string
-        }
-        return value;
-    }
-    if (typeof value === "object" && value !== null) {
-        return value[language] || value.en || "";
-    }
-    return String(value);
-};
+
 
 const parseMultilingualText = (value) => {
     if (!value) return { en: "", te: "" };

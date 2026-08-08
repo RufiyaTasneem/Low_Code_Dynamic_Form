@@ -150,18 +150,23 @@ def submit_form(
 # ======================================================
 def bulk_delete_responses(
     db: Session,
-    form_id: int,
     user_id: int,
     response_ids: list[int],
+    form_id: int | None = None,
 ):
-    responses = (
+    query = (
         db.query(Response)
+        .join(Form, Response.form_id == Form.id)
         .filter(
-            Response.form_id == form_id,
+            Form.owner_id == user_id,
             Response.id.in_(response_ids),
         )
-        .all()
     )
+
+    if form_id:
+        query = query.filter(Response.form_id == form_id)
+
+    responses = query.all()
 
     if not responses:
         return {
@@ -186,12 +191,17 @@ def bulk_delete_responses(
     db.commit()
 
     log_action(
-    db=db,
-    user_id=user_id,
-    form_id=form_id,
-    action="Bulk Delete Responses",
-    details=(
-        f"Deleted {len(ids)} responses. "
-        f"Response IDs: {ids}"
-    ),
-)
+        db=db,
+        user_id=user_id,
+        form_id=form_id,
+        action="Bulk Delete Responses",
+        details=(
+            f"Deleted {len(ids)} responses. "
+            f"Response IDs: {ids}"
+        ),
+    )
+
+    return {
+        "message": f"Successfully deleted {len(ids)} responses.",
+        "deleted": len(ids),
+    }

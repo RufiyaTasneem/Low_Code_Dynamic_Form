@@ -1,7 +1,7 @@
 import copy
 import json
 import logging
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
@@ -12,6 +12,7 @@ from app.models.response_value import ResponseValue
 from app.models.conditional_rule import ConditionalRule
 from app.models.form_link import FormLink
 from app.models.audit_log import AuditLog
+from app.models.idempotency import IdempotencyKey
 from app.services.field_type_service import get_field_types
 from app.services.audit_service import log_action
 from datetime import datetime
@@ -40,11 +41,46 @@ def create_form(
 
     return form
 def get_user_forms(db: Session, user_id: int):
-    return (
+    forms = (
         db.query(Form)
         .filter(Form.owner_id == user_id)
+        .order_by(Form.id.desc())
         .all()
     )
+
+    if not forms:
+        return []
+
+    form_ids = [f.id for f in forms]
+
+    subq = (
+        db.query(
+            FormVersion.form_id,
+            func.max(FormVersion.version).label("max_version"),
+        )
+        .filter(FormVersion.form_id.in_(form_ids))
+        .group_by(FormVersion.form_id)
+        .subquery()
+    )
+
+    latest_versions = (
+        db.query(FormVersion)
+        .join(
+            subq,
+            (FormVersion.form_id == subq.c.form_id)
+            & (FormVersion.version == subq.c.max_version),
+        )
+        .all()
+    )
+
+    version_map = {v.form_id: v for v in latest_versions}
+
+    for form in forms:
+        ver_obj = version_map.get(form.id)
+        form.version = ver_obj.version if ver_obj else 1
+        form.status = ver_obj.status.lower() if (ver_obj and ver_obj.status) else "draft"
+
+    return forms
 
 def _build_form_snapshot(db: Session, form_id: int):
     form = db.query(Form).filter(Form.id == form_id).first()
@@ -331,7 +367,20 @@ def add_field(db: Session, form_id: int, field_data):
 # Get Form
 # -----------------------------
 def get_form(db: Session, form_id: int):
-    return db.query(Form).filter(Form.id == form_id).first()
+    form = db.query(Form).filter(Form.id == form_id).first()
+    if not form:
+        return None
+
+    latest_ver = (
+        db.query(FormVersion)
+        .filter(FormVersion.form_id == form_id)
+        .order_by(FormVersion.version.desc())
+        .first()
+    )
+
+    form.version = latest_ver.version if latest_ver else 1
+    form.status = latest_ver.status.lower() if (latest_ver and latest_ver.status) else "draft"
+    return form
 
 
 # -----------------------------
@@ -607,51 +656,80 @@ def delete_form_service(
             detail="Form not found or permission denied",
         )
 
-    # Extract clean title string for audit log
-    title_raw = form.title
-    form_title = "Untitled Form"
-    if isinstance(title_raw, dict):
-        form_title = title_raw.get("en") or (list(title_raw.values())[0] if title_raw.values() else f"Form #{form_id}")
-    elif isinstance(title_raw, str):
-        try:
-            parsed = json.loads(title_raw)
-            if isinstance(parsed, dict):
-                form_title = parsed.get("en") or (list(parsed.values())[0] if parsed.values() else f"Form #{form_id}")
-            else:
+    try:
+        # Extract clean title string for audit log
+        title_raw = form.title
+        form_title = "Untitled Form"
+        if isinstance(title_raw, dict):
+            form_title = title_raw.get("en") or (list(title_raw.values())[0] if title_raw.values() else f"Form #{form_id}")
+        elif isinstance(title_raw, str):
+            try:
+                parsed = json.loads(title_raw)
+                if isinstance(parsed, dict):
+                    form_title = parsed.get("en") or (list(parsed.values())[0] if parsed.values() else f"Form #{form_id}")
+                else:
+                    form_title = title_raw
+            except Exception:
                 form_title = title_raw
-        except Exception:
-            form_title = title_raw
-    else:
-        form_title = str(title_raw)
+        else:
+            form_title = str(title_raw)
 
-    # Delete related response values and responses
-    responses = db.query(Response).filter(Response.form_id == form_id).all()
-    response_ids = [r.id for r in responses]
-    if response_ids:
-        db.query(ResponseValue).filter(ResponseValue.response_id.in_(response_ids)).delete(synchronize_session=False)
-        db.query(Response).filter(Response.form_id == form_id).delete(synchronize_session=False)
+        # 1. Fetch all response IDs for this form
+        responses = db.query(Response.id).filter(Response.form_id == form_id).all()
+        response_ids = [r.id for r in responses]
 
-    # Delete conditional rules
-    db.query(ConditionalRule).filter(ConditionalRule.form_id == form_id).delete(synchronize_session=False)
+        if response_ids:
+            # Delete idempotency keys referencing those responses first
+            db.query(IdempotencyKey).filter(
+                IdempotencyKey.response_id.in_(response_ids)
+            ).delete(synchronize_session=False)
 
-    # Delete form links
-    db.query(FormLink).filter(FormLink.form_id == form_id).delete(synchronize_session=False)
+            # Delete response values
+            db.query(ResponseValue).filter(
+                ResponseValue.response_id.in_(response_ids)
+            ).delete(synchronize_session=False)
 
-    # Decouple existing audit logs for this form so FK does not break
-    db.query(AuditLog).filter(AuditLog.form_id == form_id).update({"form_id": None}, synchronize_session=False)
+            # Delete response records
+            db.query(Response).filter(
+                Response.form_id == form_id
+            ).delete(synchronize_session=False)
 
-    # Delete the form (fields and form_versions will cascade delete)
-    db.delete(form)
+        # 2. Delete conditional rules
+        db.query(ConditionalRule).filter(
+            ConditionalRule.form_id == form_id
+        ).delete(synchronize_session=False)
 
-    # Record Audit Log for DELETE_FORM
-    log_action(
-        db=db,
-        user_id=user_id,
-        form_id=None,
-        action="DELETE_FORM",
-        details=f'Deleted form "{form_title}"',
-    )
+        # 3. Delete form links
+        db.query(FormLink).filter(
+            FormLink.form_id == form_id
+        ).delete(synchronize_session=False)
 
-    db.commit()
+        # 4. Decouple existing audit logs for this form so FK does not break
+        db.query(AuditLog).filter(
+            AuditLog.form_id == form_id
+        ).update({"form_id": None}, synchronize_session=False)
 
-    return {"message": "Form deleted successfully", "form_id": form_id}
+        # 5. Delete the form (fields and form_versions will cascade delete)
+        db.delete(form)
+
+        # 6. Record Audit Log for DELETE_FORM
+        log_action(
+            db=db,
+            user_id=user_id,
+            form_id=None,
+            action="DELETE_FORM",
+            details=f'Deleted form "{form_title}"',
+        )
+
+        db.commit()
+        return {"message": "Form deleted successfully", "form_id": form_id}
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to delete form {form_id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete form: {str(e)}"
+        )

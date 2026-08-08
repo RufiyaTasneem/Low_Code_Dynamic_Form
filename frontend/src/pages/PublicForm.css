@@ -66,6 +66,8 @@
 
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
     transition: transform .2s ease, box-shadow .2s ease;
+    position: relative;
+    overflow: visible;
 }
 
 .public-field:hover {
@@ -88,20 +90,24 @@
 
 .public-form input,
 .public-form textarea,
-.public-form select {
+.public-form select,
+.public-select-input {
     width: 100%;
+    box-sizing: border-box;
+    display: block;
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 13px 14px;
     font-size: 15px;
     background: var(--surface);
     color: var(--text);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .public-form input:focus,
 .public-form textarea:focus,
-.public-form select:focus {
+.public-form select:focus,
+.public-select-input:focus {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
@@ -112,17 +118,21 @@
     resize: vertical;
 }
 
-.public-form select {
-    appearance: none;
-    background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
-    background-position: calc(100% - 20px) calc(1.2em), calc(100% - 14px) calc(1.2em);
-    background-size: 6px 6px, 6px 6px;
-    background-repeat: no-repeat;
+.public-form select,
+.public-select-input {
+    cursor: pointer;
+}
+
+.public-form select option,
+.public-select-input option {
+    background: var(--surface, #ffffff);
+    color: var(--text, #0f172a);
 }
 
 .public-form input:disabled,
 .public-form textarea:disabled,
-.public-form select:disabled {
+.public-form select:disabled,
+.public-select-input:disabled {
     background: var(--surface-muted);
     color: var(--text-muted);
     cursor: not-allowed;
