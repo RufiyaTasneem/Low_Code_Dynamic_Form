@@ -181,10 +181,9 @@ function renderField(
                         {resolvedPlaceholder || translate("Select...", selectedLanguage)}
                     </option>
                     {rawOptions.map((opt, idx) => {
-                        const optVal = resolveOptionValue(opt);
                         const optLabel = resolveOptionDisplayLabel(opt, selectedLanguage);
                         return (
-                            <option key={idx} value={optVal}>
+                            <option key={idx} value={opt.value}>
                                 {optLabel}
                             </option>
                         );

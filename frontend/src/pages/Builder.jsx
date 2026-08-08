@@ -909,32 +909,32 @@ export default function Builder() {
                                 <h2>Versions</h2>
                             </div>
                             {isPublished && (
-                                <button className="ghost-btn" onClick={handleEditAsNewDraft}>
+                                <button className="ghost-btn version-action" onClick={handleEditAsNewDraft}>
                                     Edit as New Draft
                                 </button>
                             )}
                         </div>
 
                         <div className="version-summary">
-                            <div className="version-summary-item">
+                            <div className="version-summary-card">
                                 <span className="summary-label">Selected Version</span>
                                 <strong className="summary-val">{selectedVersion ? selectedVersion.version : "—"}</strong>
                             </div>
-                            <div className="version-summary-item">
+                            <div className="version-summary-card">
                                 <span className="summary-label">Status</span>
                                 <div>
                                     <span
-                                        className={`version-badge ${normalizeVersionStatus(selectedVersion?.status) || "draft"}`}
+                                        className={`version-status ${normalizeVersionStatus(selectedVersion?.status) || "draft"}`}
                                     >
                                         {selectedVersion?.status ? selectedVersion.status.toUpperCase() : "DRAFT"}
                                     </span>
                                 </div>
                             </div>
-                            <div className="version-summary-item">
+                            <div className="version-summary-card">
                                 <span className="summary-label">Published</span>
                                 <strong className="summary-val">{formatDate(selectedVersion?.published_at)}</strong>
                             </div>
-                            <div className="version-summary-item">
+                            <div className="version-summary-card">
                                 <span className="summary-label">Created</span>
                                 <strong className="summary-val">{formatDate(selectedVersion?.created_at)}</strong>
                             </div>
@@ -952,7 +952,7 @@ export default function Builder() {
                                         <button
                                             key={version.id}
                                             type="button"
-                                            className={`version-card ${isSelected ? "active" : ""}`}
+                                            className={`version-card ${isSelected ? "selected" : ""}`}
                                             onClick={() => handleVersionSelect(version)}
                                         >
                                             <div className="version-card-content">
@@ -963,7 +963,7 @@ export default function Builder() {
                                                     </p>
                                                 </div>
                                                 <div className="version-card-right">
-                                                    <span className={`version-badge ${statusClass}`}>
+                                                    <span className={`version-status ${statusClass}`}>
                                                         {version.status ? version.status.toUpperCase() : "DRAFT"}
                                                     </span>
                                                     <div className="version-card-created">
@@ -984,13 +984,17 @@ export default function Builder() {
                         <div>
                             <p className="eyebrow">{t("Retention Policy")}</p>
                             <h2>{t("Retention Policy")}</h2>
+                            <p className="retention-description">
+                                {t("Automatically archive responses after a specified number of days.")}
+                            </p>
                         </div>
                     </div>
 
-                    <div className="retention-body">
+                    <div className="retention-body retention-controls">
                         <label>{t("Automatically archive responses after")}</label>
 
                         <input
+                            className="retention-input"
                             type="number"
                             min="0"
                             value={retentionDays}
@@ -1001,7 +1005,7 @@ export default function Builder() {
 
                         <span>{t("days")}</span>
 
-                        <button onClick={saveRetentionPolicy}>
+                        <button className="retention-save-btn" onClick={saveRetentionPolicy}>
                             {t("Save Policy")}
                         </button>
                     </div>
@@ -1018,10 +1022,10 @@ export default function Builder() {
                         <div className="share-link-body">
                             <input type="text" readOnly value={shareUrl} className="share-link-input" />
                             <div className="share-link-actions">
-                                <button type="button" className="ghost-btn" onClick={copyShareLink}>
+                                <button type="button" className="share-link-copy" onClick={copyShareLink}>
                                     Copy Link
                                 </button>
-                                <button type="button" onClick={() => window.open(shareUrl, "_blank")}>
+                                <button type="button" className="share-link-open" onClick={() => window.open(shareUrl, "_blank")}>
                                     Open Form
                                 </button>
                             </div>

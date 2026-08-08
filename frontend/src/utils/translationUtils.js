@@ -268,30 +268,41 @@ export const normalizeOptions = (options) => {
     }
 
     const expandedList = [];
-    for (const item of list) {
-        if (typeof item === "string") {
-            const trimmedItem = item.trim();
-            if (trimmedItem.startsWith("{") || trimmedItem.startsWith("[")) {
-                try {
-                    const parsed = JSON.parse(trimmedItem);
-                    if (Array.isArray(parsed)) {
-                        expandedList.push(...parsed);
-                        continue;
-                    }
-                } catch (e) {
-                    // Fallthrough
-                }
-            }
-            if (trimmedItem.includes(",")) {
-                const parts = trimmedItem.split(/[,\n]+/).map((s) => s.trim()).filter(Boolean);
-                expandedList.push(...parts);
-            } else if (trimmedItem) {
-                expandedList.push(trimmedItem);
-            }
-        } else if (item !== undefined && item !== null) {
-            expandedList.push(item);
+    const expandEntry = (entry) => {
+        if (typeof entry !== "string") {
+            if (entry !== undefined && entry !== null) expandedList.push(entry);
+            return;
         }
-    }
+
+        const trimmedEntry = entry.trim();
+        if (!trimmedEntry) return;
+
+        if (trimmedEntry.startsWith("{") || trimmedEntry.startsWith("[")) {
+            try {
+                const parsed = JSON.parse(trimmedEntry);
+                if (Array.isArray(parsed)) {
+                    parsed.forEach(expandEntry);
+                    return;
+                }
+                if (parsed && typeof parsed === "object") {
+                    expandedList.push(parsed);
+                    return;
+                }
+            } catch (e) {
+                // Treat invalid JSON as a plain option string.
+            }
+        }
+
+        // Arrays from the backend may contain a single plain string such as
+        // ["yes,no"]. Split only those strings; option objects stay intact.
+        trimmedEntry
+            .split(/[,\n]+/)
+            .map((part) => part.trim())
+            .filter(Boolean)
+            .forEach((part) => expandedList.push(part));
+    };
+
+    list.forEach(expandEntry);
 
     return expandedList.map(normalizeSingleOption);
 };

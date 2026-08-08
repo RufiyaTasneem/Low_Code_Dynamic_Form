@@ -1,50 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { resolveText } from "../utils/translationUtils";
-
-const normalizeOptions = (options) => {
-    if (!options) return [];
-    let list = options;
-    if (typeof list === "string") {
-        list = list.split(/[,\n]+/).map((s) => (s ?? "").trim()).filter(Boolean);
-    }
-    if (!Array.isArray(list)) return [];
-
-    return list.map((opt) => {
-        if (!opt) return { value: "", label: { en: "" } };
-
-        if (typeof opt === "string") {
-            try {
-                const parsed = JSON.parse(opt);
-                if (typeof parsed === "object" && parsed !== null && (parsed.value || parsed.label || parsed.en)) {
-                    const val = parsed.value || parsed.label?.en || parsed.en || "";
-                    const labelObj = (parsed.label && typeof parsed.label === "object")
-                        ? { ...parsed.label }
-                        : { en: typeof parsed.label === "string" ? parsed.label : (parsed.en || val) };
-                    return { value: val, label: labelObj };
-                }
-            } catch (e) {
-                // Plain string
-            }
-            return { value: opt, label: { en: opt } };
-        }
-
-        if (typeof opt === "object" && opt !== null) {
-            const val = opt.value || opt.label?.en || opt.en || "";
-            let labelObj = {};
-            if (opt.label && typeof opt.label === "object") {
-                labelObj = { ...opt.label };
-            } else if (typeof opt.label === "string") {
-                labelObj = { en: opt.label };
-            } else {
-                labelObj = { en: val };
-            }
-            return { value: val, label: labelObj };
-        }
-
-        return { value: String(opt), label: { en: String(opt) } };
-    });
-};
+import { resolveText, normalizeOptions } from "../utils/translationUtils";
 
 function ConfigPanel({
     selectedField,
